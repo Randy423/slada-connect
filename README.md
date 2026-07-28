@@ -14,6 +14,53 @@ python -m http.server 8794
 
 Serving over HTTP is recommended (the medicine checker calls two public APIs). Opening the file directly from disk also works; only live medicine lookup is affected if the browser blocks cross-origin requests from `file://`.
 
+## Deploying to Vercel
+
+The project is a static site with no build step, so Vercel serves it as-is. `vercel.json` is already configured: `index.html` is revalidated on every request and assets are cached for an hour, so people you share the link with always get the current version.
+
+Pick whichever is easiest — all three produce the same result.
+
+**1. Drag and drop (no tooling)**
+
+Go to [vercel.com/new](https://vercel.com/new), choose to deploy without a Git repository, and drag the `slada-connect` folder in. A `.vercel.app` URL appears in under a minute.
+
+**2. Vercel CLI**
+
+```bash
+npm install -g vercel
+```
+
+Then from inside the project folder:
+
+```bash
+vercel
+```
+
+The first run asks you to sign in (it opens a browser) and then a few setup questions — accept the defaults; the project needs no build command and no output directory. For a production URL:
+
+```bash
+vercel --prod
+```
+
+**3. GitHub (best if you'll keep editing)**
+
+A git repository is already initialised with an initial commit. Create an empty repo on GitHub, then:
+
+```bash
+git remote add origin https://github.com/<you>/slada-connect.git
+git push -u origin main
+```
+
+Import that repo at [vercel.com/new](https://vercel.com/new). Every push then redeploys automatically, and each pull request gets its own preview URL.
+
+**Framework preset:** *Other*. Leave build command and output directory empty — there is nothing to build.
+
+### After deploying
+
+- The medicine checker calls RxNorm and openFDA over HTTPS, so it works identically on a `.vercel.app` domain with no CORS or mixed-content issues.
+- Everything is client-side, so there are no environment variables or secrets to configure.
+- If you edit an asset and the change doesn't appear, bump the `?v=2` query strings in `index.html` to `?v=3`.
+
 ## Structure
 
 ```
