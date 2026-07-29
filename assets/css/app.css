@@ -378,11 +378,12 @@ body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
     position:fixed;left:0;top:0;height:100dvh;
     transform:translateX(-100%);transition:transform .3s var(--ease);
     box-shadow:var(--sh-3);
+    z-index:80;              /* must sit above the scrim and the tab bar */
   }
   .sidebar.open{transform:none}
   .hamburger{display:grid}
   .scrim{
-    position:fixed;inset:0;background:rgba(11,27,52,.42);z-index:55;
+    position:fixed;inset:0;background:rgba(11,27,52,.42);z-index:75;
     animation:fadeIn .25s both;backdrop-filter:blur(2px);
   }
 }
@@ -409,7 +410,10 @@ body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
 @media (max-width:1000px){
   body.athlete .tabbar{display:flex}
   body.athlete .content{padding-bottom:calc(var(--tabbar-h) + 26px)}
-  body.athlete .sidebar{display:none}
+  /* The athlete sidebar stays available as a drawer. The bottom tab bar
+     only carries four destinations, so Quiz, Prohibited List, TUE,
+     Resources, Notifications and Settings are reachable nowhere else. */
+  body.athlete .sidebar .sb-foot{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 }
 
 /* ==========================================================================
