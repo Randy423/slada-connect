@@ -17,8 +17,9 @@ function recentViewRows(limit){
     rows.push('<button class="listrow" onclick="go(\''+path+'\')">'+
       '<span class="lr-ic '+st.bg+'">'+st.emoji+'</span>'+
       '<span class="grow"><span class="lr-t truncate" style="display:block">'+esc(v.name)+'</span>'+
-      '<span class="lr-s" style="display:block">'+(v.kind==="ing"?"Active ingredient":"Medicine database")+'</span></span>'+
-      '<span class="badge '+({permitted:"green",caution:"amber",prohibited:"red",monitored:"blue",unclassified:"slate"})[v.status]+'">'+esc(st.label)+'</span>'+
+      '<span class="lr-s" style="display:block">'+(v.kind==="ing"?"Active ingredient":"Medicine database")+'</span>'+
+      '<span class="lr-status '+st.tint+'">'+esc(st.label)+'</span></span>'+
+      '<span class="badge '+BADGE_TONE[v.status]+'">'+esc(st.label)+'</span>'+
     '</button>');
   });
   Store.s.viewedLocal.forEach(function(id){ var m = medById(id); if(m) rows.push(medRow(m)); });
@@ -446,8 +447,9 @@ Athlete.searchBody = function(){
         return '<button class="listrow" onclick="go(\'athlete/ing/'+g.idx+'\')">'+
           '<span class="lr-ic '+st.bg+'">'+st.emoji+'</span>'+
           '<span class="grow"><span class="lr-t" style="display:block">'+esc(g.name)+'</span>'+
-          '<span class="lr-s" style="display:block">'+esc(g.cat)+'</span></span>'+
-          '<span class="badge '+({permitted:"green",caution:"amber",prohibited:"red",monitored:"blue"})[g.status]+'">'+esc(st.label)+'</span>'+
+          '<span class="lr-s" style="display:block">'+esc(g.cat)+'</span>'+
+          '<span class="lr-status '+st.tint+'">'+esc(st.label)+'</span></span>'+
+          '<span class="badge '+BADGE_TONE[g.status]+'">'+esc(st.label)+'</span>'+
         '</button>';
       }).join("")+'</div>';
   }

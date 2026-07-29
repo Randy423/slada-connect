@@ -1002,6 +1002,90 @@ html[data-theme="dark"] .toast{background:#F3F7FC;color:#0B1B34}
 }
 html[data-theme="dark"] .demo-note{color:var(--ink-2)}
 
+/* ==========================================================================
+   Mobile hardening
+   Grid and flex children default to min-width:auto, so they refuse to
+   shrink below their content and blow the layout out sideways on narrow
+   screens. Everything below either allows shrinking or gives long content
+   somewhere to wrap.
+   ========================================================================== */
+.dash-grid > *, .stat-grid > *, .quick-grid > *, .role-grid > *,
+.feat-grid > *, .grid-2 > *, .home-grid > *{ min-width:0; }
+.login-wrap > *{ min-width:0; max-width:100%; }
+.row > *, .row-b > *{ min-width:0; }
+/* in a wrapping row, the flexible block claims a sensible width and pushes
+   trailing actions onto their own line rather than being crushed */
+.row.wrap > .grow, .row-b.wrap > div:first-child{ flex:1 1 200px; }
+.listrow .grow, .sugg .sg-n, .learn-card .grow, .award .grow, .notif .grow{ min-width:0; }
+
+/* long chemical names, emails and IDs need a break opportunity */
+.mh-v, .kv dd, .cell-strong, .cell-sub, .info-card p, .lr-s{ overflow-wrap:anywhere; }
+.badge{ white-space:nowrap; }
+
+/* button rows must wrap rather than run off the edge */
+.wiz-foot{ flex-wrap:wrap; }
+.modal .row, .sheet .row{ flex-wrap:wrap; }
+
+/* status label shown inline on narrow screens, where the pill does not fit */
+.lr-status{
+  display:none;font-size:10.5px;font-weight:750;letter-spacing:.04em;
+  text-transform:uppercase;margin-top:5px;
+}
+
+@media (max-width:900px){
+  .dash-grid{ grid-template-columns:1fr; }
+}
+
+@media (max-width:640px){
+  /* reclaim horizontal space — large paddings dominate a 375px screen */
+  .card.pad{ padding:18px; }
+  .info-card{ padding:17px; }
+  .med-hero{ padding:20px; border-radius:var(--r-lg); }
+  .quiz-hero{ padding:26px 20px; }
+  .cert{ padding:30px 20px; }
+  .cert::before{ inset:8px; border-radius:18px; }
+  .login{ padding:26px 20px; }
+  .modal{ padding:22px; border-radius:22px; }
+  .role-card{ padding:22px; }
+  .chart-card{ padding:18px; }
+
+  /* list rows: drop the wide pill, show a compact label under the name */
+  .listrow > .badge{ display:none; }
+  .lr-status{ display:block; }
+
+  /* button groups stack cleanly */
+  .wiz-foot{ gap:10px; }
+  .wiz-foot > .btn{ flex:1 1 auto; }
+  .wiz-foot > .row{ width:100%; }
+  .wiz-foot .row .btn{ flex:1 1 145px; }
+  .modal .row .btn, .sheet .row .btn{ flex:1 1 auto; }
+
+  /* headers with a trailing action */
+  .page-h h1{ font-size:22px; }
+  .toolbar > *{ flex:1 1 100%; }
+  .toolbar .btn{ flex:1 1 auto; }
+
+  /* charts stay legible rather than squeezing to slivers */
+  .bars{ height:150px; }
+  .qh-stats div{ padding:11px 16px;min-width:84px; }
+  .cert-meta{ gap:16px; }
+  .stat{ padding:17px; }
+  .stat .s-n{ font-size:26px; }
+}
+
+@media (max-width:400px){
+  .content{ padding:14px; }
+  /* very long single words (names, chemical names) get a break opportunity */
+  .page-h h1, .row .grow h1, .med-hero h2, .cert .who{ overflow-wrap:anywhere; }
+  .med-hero h2{ font-size:22px; }
+  .status-badge{ font-size:13.5px;padding:9px 15px; }
+  .opt{ padding:14px;font-size:14px; }
+  .opt .ltr{ width:26px;height:26px; }
+  .avatar.lg{ width:54px;height:54px;border-radius:15px;font-size:18px; }
+  .qh-stats{ gap:8px; }
+  .qh-stats div{ flex:1 1 84px;padding:10px 8px; }
+}
+
 /* print */
 @media print{
   .proto-bar,.sidebar,.topbar,.tabbar,.wiz-foot,.no-print{display:none !important}

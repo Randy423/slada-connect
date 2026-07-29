@@ -698,12 +698,15 @@ function statusBadgeCls(status){
   return m[status] || "slate";
 }
 
+var BADGE_TONE = {permitted:"green", caution:"amber", prohibited:"red", monitored:"blue", unclassified:"slate"};
+
 function medRow(m){
   var st = STATUS[m.status];
   return '<button class="listrow" onclick="go(\'athlete/med/'+m.id+'\')">'+
     '<span class="lr-ic '+st.bg+'">'+st.emoji+'</span>'+
     '<span class="grow"><span class="lr-t" style="display:block">'+esc(m.brand)+'</span>'+
-    '<span class="lr-s" style="display:block">'+esc(m.ingredient)+'</span></span>'+
-    '<span class="badge '+({permitted:"green",caution:"amber",prohibited:"red",monitored:"blue",unclassified:"slate"})[m.status]+'">'+esc(st.label)+'</span>'+
+    '<span class="lr-s" style="display:block">'+esc(m.ingredient)+'</span>'+
+    '<span class="lr-status '+st.tint+'">'+esc(st.label)+'</span></span>'+
+    '<span class="badge '+BADGE_TONE[m.status]+'">'+esc(st.label)+'</span>'+
   '</button>';
 }
