@@ -737,7 +737,9 @@ function openResource(id){
 /* ---------- curated medication detail ---------- */
 Athlete.med = function(id){
   var m = medById(id);
-  if(!m) return Athlete.check();
+  if(!m) return notFoundBlock("Medicine",
+    "No in-app guide exists for “"+id+"”. It may have been renamed since this link was shared. Search for it instead — the medicine database covers far more than the in-app guides.",
+    "Search medicines", "athlete/check");
   var st = STATUS[m.status];
 
   Store.s.viewedLocal = [id].concat(Store.s.viewedLocal.filter(function(v){ return v!==id; })).slice(0,8);
@@ -779,7 +781,9 @@ Athlete.med = function(id){
 /* ---------- ingredient detail (offline capable) ---------- */
 Athlete.ing = function(idx){
   var it = INGREDIENTS[+idx];
-  if(!it) return Athlete.check();
+  if(!it) return notFoundBlock("Ingredient",
+    "That ingredient reference is not valid. Search for the ingredient by name instead.",
+    "Search medicines", "athlete/check");
   var rule = it.rule, st = STATUS[rule.status];
   var lab = LABEL_CACHE[it.key];
   var cardCls = rule.status === "prohibited" ? "danger" : (rule.status === "caution" ? "warn" : "");
@@ -1083,7 +1087,9 @@ function illo(id){
 
 Athlete.article = function(id){
   var a = artById(id);
-  if(!a) return Athlete.learn();
+  if(!a) return notFoundBlock("Guide",
+    "No guide exists at “"+id+"”. Browse the Learn section for the full set of nine.",
+    "Open Learn", "athlete/learn");
   var done = Store.s.readArticles.indexOf(a.id) !== -1;
 
   var body = a.body.map(function(b){
@@ -1148,7 +1154,7 @@ Athlete.quiz = function(){
   disclaimerBlock();
 };
 
-function startQuiz(){ Q = {i:0, score:0, answered:false, picked:-1}; go("athlete/quizrun"); }
+function startQuiz(){ Q = {i:0, score:0, answered:false, picked:-1, attempted:false}; go("athlete/quizrun"); }
 
 Athlete.quizrun = function(){
   var q = QUIZ[Q.i];
@@ -1198,6 +1204,7 @@ function pickAnswer(idx){
 function nextQ(){ Q.i++; Q.answered = false; Q.picked = -1; Router.render(); }
 function quitQuiz(){ go("athlete/learn"); }
 function finishQuiz(){
+  Q.attempted = true;
   Store.s.quizTaken++;
   if(Store.s.quizBest === null || Q.score > Store.s.quizBest) Store.s.quizBest = Q.score;
   Store.save();
@@ -1205,6 +1212,18 @@ function finishQuiz(){
 }
 
 Athlete.quizresult = function(){
+  // Deep-linked or refreshed without an attempt in this session: a
+  // certificate reading 0/10 would be worse than no certificate.
+  if(!Q.attempted){
+    return '<div class="empty" style="padding-top:60px">'+
+      '<div class="e-ic">🧠</div><h4>No quiz result to show</h4>'+
+      '<p>Results are generated when you finish the quiz. Your best score is kept on your profile'+
+      (Store.s.quizBest !== null ? ' — currently <b>'+Store.s.quizBest+'/'+QUIZ.length+'</b>' : '')+'.</p>'+
+      '<div class="row" style="justify-content:center;gap:10px;margin-top:22px">'+
+        '<button class="btn" onclick="startQuiz()">Take the quiz</button>'+
+        '<button class="btn ghost" onclick="go(\'athlete/profile\')">View profile</button>'+
+      '</div></div>';
+  }
   var score = Q.score, total = QUIZ.length, pct = score/total;
   var pass = score >= 7, champ = score >= 9;
   var allRead = Store.s.readArticles.length === ARTICLES.length;

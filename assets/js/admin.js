@@ -156,9 +156,16 @@ Admin.reports = function(){
   '</div>';
 };
 
+var userFilter = "";
+
 Admin.users = function(){
-  var rows = USERS.map(function(u){
-    return '<tr onclick="UI.toast(\'Prototype: user management is not implemented\')">'+
+  var q = userFilter.toLowerCase();
+  var list = USERS.filter(function(u){
+    return !q || (u.name+" "+u.email+" "+u.role+" "+u.status).toLowerCase().indexOf(q) !== -1;
+  });
+
+  var rows = list.map(function(u){
+    return '<tr onclick="viewUser(\''+esc(u.email)+'\')">'+
       '<td><div class="row" style="gap:10px"><span class="avatar sm">'+esc(initials(u.name))+'</span>'+
         '<span><div class="cell-strong">'+esc(u.name)+'</div><div class="cell-sub">'+esc(u.email)+'</div></span></div></td>'+
       '<td><span class="badge '+(u.role.indexOf("Admin")!==-1?"violet":(u.role.indexOf("Officer")!==-1?"blue":"slate"))+'">'+esc(u.role)+'</span></td>'+
@@ -170,15 +177,46 @@ Admin.users = function(){
   return pageHead("Manage users","Officers, administrators and support staff with access to the platform.")+
   '<div class="toolbar">'+
     '<div class="search-inline"><span style="color:var(--faint)">'+ICON.search+'</span>'+
-      '<input placeholder="Search by name, email or role" oninput="UI.toast(\'Prototype: user search is not wired up\')" /></div>'+
+      '<input placeholder="Search by name, email or role" value="'+esc(userFilter)+'" oninput="userFilter=this.value;refreshUsers()" /></div>'+
     '<button class="btn" onclick="UI.toast(\'Prototype: user creation is not implemented\')">'+ICON.plus+' Add user</button>'+
   '</div>'+
-  '<div class="table-wrap"><table class="tbl"><thead><tr>'+
-    '<th>User</th><th>Role</th><th>Last active</th><th>Status</th>'+
-  '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  '<div id="uTable">'+
+  (list.length
+    ? '<div class="table-wrap"><table class="tbl"><thead><tr>'+
+      '<th>User</th><th>Role</th><th>Last active</th><th>Status</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    : '<div class="empty"><div class="e-ic">🔎</div><h4>No users found</h4><p>Nothing matched “'+esc(userFilter)+'”. Try a name, email address or role.</p></div>')+
+  '</div>'+
   '<div class="src-note"><span>'+ICON.info+'</span><span>Role-based access control is represented visually only. '+
     'A production build would enforce permissions server-side.</span></div>';
 };
+
+function refreshUsers(){
+  var el = $("#uTable");
+  if(!el) return;
+  var tmp = document.createElement("div");
+  tmp.innerHTML = Admin.users();
+  el.innerHTML = tmp.querySelector("#uTable").innerHTML;
+}
+
+function viewUser(email){
+  var u = null;
+  for(var i=0;i<USERS.length;i++){ if(USERS[i].email === email){ u = USERS[i]; break; } }
+  if(!u) return;
+  UI.modal(
+    '<div class="row mb-16" style="gap:13px">'+
+      '<span class="avatar lg">'+esc(initials(u.name))+'</span>'+
+      '<div class="grow"><h3 style="margin:0">'+esc(u.name)+'</h3>'+
+      '<p class="muted" style="font-size:13px;margin:5px 0 0">'+esc(u.email)+'</p></div></div>'+
+    '<dl class="kv">'+
+      '<dt>Role</dt><dd>'+esc(u.role)+'</dd>'+
+      '<dt>Status</dt><dd>'+esc(u.status)+'</dd>'+
+      '<dt>Last active</dt><dd>'+esc(u.last)+'</dd>'+
+    '</dl>'+
+    '<div class="src-note"><span>'+ICON.info+'</span><span>Editing users and changing permissions is not implemented in this prototype.</span></div>'+
+    '<button class="btn ghost block" onclick="UI.closeModal()">Close</button>'
+  );
+}
 
 /* ==========================================================================
    Shared — notifications

@@ -602,6 +602,14 @@ var Router = {
     return ROUTES[segs[0]] ? segs[0] : two;
   },
   render:function(){
+    // In-page anchors ("#features") are not routes. Without this they fall
+    // through to the unknown-route redirect and throw the visitor back to
+    // the landing page mid-scroll.
+    var raw = location.hash;
+    if(raw && raw.charAt(1) !== "/" && raw.length > 1){
+      var el = document.getElementById(raw.slice(1));
+      if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); return; }
+    }
     var segs = this.parse();
     var key = this.keyOf(segs);
     var arg = segs.length > 2 ? segs.slice(2).join("/") : (ROUTES[key] ? null : segs[1]);
@@ -677,6 +685,21 @@ function disclaimerBlock(){
 
 function pageHead(title, sub){
   return '<div class="page-h"><h1>'+esc(title)+'</h1>'+(sub ? '<p>'+esc(sub)+'</p>' : "")+'</div>';
+}
+
+/* Shown when a deep link points at something that no longer exists —
+   a shared or bookmarked URL with a stale id. Silently rendering a
+   different page leaves the address bar disagreeing with the screen. */
+function notFoundBlock(what, msg, backLabel, backPath){
+  return '<div class="empty" style="padding-top:60px">'+
+    '<div class="e-ic">🔗</div>'+
+    '<h4>'+esc(what)+' not found</h4>'+
+    '<p>'+esc(msg)+'</p>'+
+    '<div class="row" style="justify-content:center;gap:10px;margin-top:22px">'+
+      '<button class="btn" onclick="go(\''+backPath+'\')">'+esc(backLabel)+'</button>'+
+      '<button class="btn ghost" onclick="go(\'\')">Home</button>'+
+    '</div>'+
+  '</div>';
 }
 
 function backLink(label, path){

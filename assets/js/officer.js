@@ -233,7 +233,9 @@ function refreshAthletes(role){
 function athleteDetail(id, role){
   var a = null;
   for(var i=0;i<ATHLETES.length;i++){ if(ATHLETES[i].id === id){ a = ATHLETES[i]; break; } }
-  if(!a) return athleteTable(role);
+  if(!a) return notFoundBlock("Athlete",
+    "No athlete record matches “"+id+"”. Search the register instead.",
+    "Open athlete database", role + "/athletes");
   var his = (Store.s.submittedTests||[]).concat(TESTS).filter(function(x){ return x.athleteId === a.id; });
 
   return backLink("Back to athletes", role+"/athletes")+
