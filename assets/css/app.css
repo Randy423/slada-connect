@@ -124,7 +124,13 @@ html[data-theme="dark"] .proto-bar{background:#050B16}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 .proto-x{margin-left:auto;color:#8FA3C0;font-size:19px;line-height:1;padding:0 4px}
 .proto-x:hover{color:#fff}
-body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
+
+/* The banner is fixed, so content needs an offset. Apply it by default and
+   remove it via a class when the banner is dismissed — :has() is only a
+   progressive enhancement, and older Safari/Android lack it entirely,
+   which previously left the banner sitting on top of the page. */
+.shell,.landing{padding-top:33px}
+body.no-proto .shell,body.no-proto .landing{padding-top:0}
 
 /* ==========================================================================
    Utility
@@ -303,13 +309,13 @@ body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
 /* ==========================================================================
    Layout shell (portals)
    ========================================================================== */
-.shell{display:flex;min-height:100dvh;background:var(--bg-sunk)}
+.shell{display:flex;min-height:100vh;min-height:100dvh;background:var(--bg-sunk)}
 
 .sidebar{
   width:var(--sidebar-w);flex:0 0 var(--sidebar-w);
   background:var(--bg);border-right:1px solid var(--line);
   display:flex;flex-direction:column;
-  position:sticky;top:0;height:100dvh;
+  position:sticky;top:0;height:100vh;height:100dvh;
   z-index:60;
 }
 .sb-brand{
@@ -375,7 +381,7 @@ body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
 /* mobile: sidebar becomes a drawer */
 @media (max-width:1000px){
   .sidebar{
-    position:fixed;left:0;top:0;height:100dvh;
+    position:fixed;left:0;top:0;height:100vh;height:100dvh;
     transform:translateX(-100%);transition:transform .3s var(--ease);
     box-shadow:var(--sh-3);
     z-index:80;              /* must sit above the scrim and the tab bar */
@@ -419,7 +425,7 @@ body:has(.proto-bar) .shell,body:has(.proto-bar) .landing{padding-top:33px}
 /* ==========================================================================
    Landing page
    ========================================================================== */
-.landing{background:var(--bg);min-height:100dvh}
+.landing{background:var(--bg);min-height:100vh;min-height:100dvh}
 .nav{
   position:sticky;top:0;z-index:80;
   display:flex;align-items:center;gap:14px;
@@ -985,7 +991,7 @@ html[data-theme="dark"] .toast{background:#F3F7FC;color:#0B1B34}
 .modal{
   position:relative;
   width:min(560px,100%);
-  max-height:calc(100dvh - 32px);
+  max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);
   overflow-y:auto;
   background:var(--bg);border-radius:var(--r-xl);padding:28px;
   box-shadow:var(--sh-3);animation:pop .28s var(--ease) both;
@@ -1001,7 +1007,7 @@ html[data-theme="dark"] .toast{background:#F3F7FC;color:#0B1B34}
 .modal p,.sheet p{font-size:14.5px;line-height:1.65;color:var(--ink-2);margin:0 0 16px}
 
 /* login */
-.login-wrap{min-height:100dvh;display:grid;place-items:center;padding:24px;background:var(--bg-sunk)}
+.login-wrap{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:var(--bg-sunk)}
 .login{
   width:min(430px,100%);background:var(--bg);border:1px solid var(--line);
   border-radius:var(--r-xl);padding:36px;box-shadow:var(--sh-2);animation:fadeUp .4s var(--ease) both;

@@ -165,7 +165,7 @@ Admin.users = function(){
   });
 
   var rows = list.map(function(u){
-    return '<tr onclick="viewUser(\''+esc(u.email)+'\')">'+
+    return '<tr '+act("viewUser", u.email)+'>'+
       '<td><div class="row" style="gap:10px"><span class="avatar sm">'+esc(initials(u.name))+'</span>'+
         '<span><div class="cell-strong">'+esc(u.name)+'</div><div class="cell-sub">'+esc(u.email)+'</div></span></div></td>'+
       '<td><span class="badge '+(u.role.indexOf("Admin")!==-1?"violet":(u.role.indexOf("Officer")!==-1?"blue":"slate"))+'">'+esc(u.role)+'</span></td>'+

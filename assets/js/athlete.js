@@ -14,7 +14,7 @@ function recentViewRows(limit){
     var st = STATUS[v.status] || STATUS.unclassified;
     var path = v.kind === "ing" ? ("athlete/ing/"+v.key) : ("athlete/rmed/"+v.key);
     if(v.kind !== "ing") RNAME[v.key] = v.name;
-    rows.push('<button class="listrow" onclick="go(\''+path+'\')">'+
+    rows.push('<button class="listrow" '+act("go", path)+'>'+
       '<span class="lr-ic '+st.bg+'">'+st.emoji+'</span>'+
       '<span class="grow"><span class="lr-t truncate" style="display:block">'+esc(v.name)+'</span>'+
       '<span class="lr-s" style="display:block">'+(v.kind==="ing"?"Active ingredient":"Medicine database")+'</span>'+
@@ -37,9 +37,9 @@ Athlete.signin = function(){
     '<p class="lg-s">Access your clean sport dashboard, medication checks and learning progress.</p>'+
     '<div class="demo-note"><b>Prototype access.</b> No real authentication is implemented. '+
       'Use any values, or press Sign in to continue as <b>'+esc(Store.s.athleteName)+'</b>.</div>'+
-    '<div class="field"><label class="label">EMAIL OR ATHLETE ID</label>'+
+    '<div class="field"><label class="label" for="asEmail">EMAIL OR ATHLETE ID</label>'+
       '<input class="input" id="asEmail" placeholder="you@example.lk" autocomplete="off" /></div>'+
-    '<div class="field"><label class="label">PASSWORD</label>'+
+    '<div class="field"><label class="label" for="asPass">PASSWORD</label>'+
       '<input class="input" id="asPass" type="password" placeholder="••••••••" autocomplete="off" /></div>'+
     '<button class="btn lg block mt-16" onclick="athleteSignIn()">Sign in</button>'+
     '<div class="row mt-20" style="gap:12px;align-items:center">'+
@@ -94,15 +94,16 @@ Athlete.register = function(){
   function rf(label, key, opts){
     opts = opts || {};
     var val = d[key] == null ? "" : d[key];
+    var id = "r_" + key.replace(/[^\w]/g, "_");
     if(opts.type === "select"){
-      return '<div class="field"><label class="label">'+esc(label)+'</label>'+
-        '<select class="select" onchange="regSet(\''+key+'\',this.value)">'+
+      return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
+        '<select id="'+id+'" class="select" onchange="regSet(\''+key+'\',this.value)">'+
           '<option value=""'+(!val?" selected":"")+'>'+esc(opts.placeholder||"Select")+'</option>'+
           opts.options.map(function(o){ return '<option'+(val===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+
         '</select></div>';
     }
-    return '<div class="field"><label class="label">'+esc(label)+'</label>'+
-      '<input class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
+    return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
+      '<input id="'+id+'" class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
       'value="'+esc(val)+'" oninput="regSet(\''+key+'\',this.value)" /></div>';
   }
 
@@ -396,11 +397,11 @@ Athlete.searchBody = function(){
     }).join("");
     var recents = Store.s.recent.length
       ? Store.s.recent.map(function(n,i){
-          return '<button class="listrow" onclick="quickSearch(\''+esc(n)+'\')">'+
+          return '<button class="listrow" '+act("recentSearch", i)+'>'+
             '<span class="lr-ic bg-slate" style="color:var(--muted)">'+
               '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg></span>'+
             '<span class="grow"><span class="lr-t">'+esc(n)+'</span></span>'+
-            '<span class="lr-m" onclick="event.stopPropagation();clearRecent('+i+')" style="cursor:pointer">'+ICON.x+'</span>'+
+            '<span class="lr-m" '+act("clearRecent", i)+' style="cursor:pointer">'+ICON.x+'</span>'+
           '</button>';
         }).join("")
       : '<div class="empty" style="padding:30px"><p>No recent searches yet.</p></div>';
@@ -569,6 +570,21 @@ function rememberSearch(q){
   Store.save();
 }
 function clearRecent(i){ Store.s.recent.splice(i,1); Store.save(); refreshSearch(); }
+
+/* Recent searches are addressed by index, never by interpolating the
+   stored text into a handler — that text is attacker-controlled. */
+registerAction("recentSearch", function(i){
+  var term = Store.s.recent[+i];
+  if(term != null) quickSearch(term);
+});
+registerAction("clearRecent", function(i, el, e){
+  e.stopPropagation();
+  clearRecent(+i);
+});
+registerAction("retryLabel", function(key){ retryLabel(key); });
+registerAction("retryRemote", function(rxcui){ retryRemote(rxcui); });
+registerAction("viewUser", function(email){ viewUser(email); });
+registerAction("viewTest", function(id){ viewTest(id); });
 function refreshSearch(){ var b = $("#sbody"); if(b) b.innerHTML = Athlete.searchBody(); }
 function setSpin(on){ var s = $("#sspin"); if(s) s.classList.toggle("hide", !on); }
 
@@ -796,7 +812,7 @@ Athlete.ing = function(idx){
     labelCard = '<div class="info-card"><h4>What it is used for</h4>'+
       '<p class="muted" style="font-size:13.5px">Label information could not be loaded. '+
       'This does not affect the status above, which is determined offline.</p>'+
-      '<button class="btn ghost sm mt-12" onclick="retryLabel(\''+esc(it.key)+'\')">Try again</button></div>';
+      '<button class="btn ghost sm mt-12" '+act("retryLabel", it.key)+'>Try again</button></div>';
   } else if(lab && (lab.purpose || lab.pharm || lab.brands)){
     labelCard = '<div class="info-card"><h4>What it is used for</h4>'+
       (lab.purpose ? '<p>'+esc(lab.purpose)+'</p>' : '<p>No plain-language summary was returned for this ingredient.</p>')+
@@ -855,7 +871,7 @@ Athlete.rmed = function(rxcui){
       '<div class="empty"><div class="e-ic">📡</div><h4>Could not load this medicine</h4>'+
       '<p>The medicine database could not be reached. Check your connection and try again, or verify this product directly on Global DRO.</p>'+
       '<div class="row" style="justify-content:center;gap:10px;margin-top:22px">'+
-        '<button class="btn" onclick="retryRemote(\''+esc(rxcui)+'\')">Try again</button>'+
+        '<button class="btn" '+act("retryRemote", rxcui)+'>Try again</button>'+
         '<button class="btn ghost" onclick="openResource(\'gdro\')">Check on Global DRO</button>'+
       '</div></div>'+disclaimerBlock();
   }
@@ -1423,7 +1439,11 @@ Athlete.profile = function(){
     '</div>';
   }).join("");
 
-  var myTests = TESTS.filter(function(x){ return x.athleteId === s.athleteId; });
+  // include tests submitted through the officer workflow, exactly as the
+  // officer and admin views do — otherwise an athlete cannot see a test
+  // that was just recorded against them.
+  var myTests = (Store.s.submittedTests || []).concat(TESTS)
+    .filter(function(x){ return x.athleteId === s.athleteId; });
 
   return '<div class="row mb-24 wrap" style="gap:16px">'+
     '<span class="avatar lg">'+esc(initials(s.athleteName))+'</span>'+
@@ -1513,15 +1533,15 @@ function editProfile(){
   UI.modal(
     '<h3>Athlete details</h3>'+
     '<p class="muted" style="font-size:13.5px">Your sport determines which substances are restricted for you, and appears on your completion certificate.</p>'+
-    '<div class="field"><label class="label">FULL NAME</label><input class="input" id="pfName" value="'+esc(s.athleteName)+'" /></div>'+
-    '<div class="field"><label class="label">EMAIL</label><input class="input" id="pfEmail" type="email" value="'+esc(s.athleteEmail||"")+'" /></div>'+
+    '<div class="field"><label class="label" for="pfName">FULL NAME</label><input class="input" id="pfName" value="'+esc(s.athleteName)+'" /></div>'+
+    '<div class="field"><label class="label" for="pfEmail">EMAIL</label><input class="input" id="pfEmail" type="email" value="'+esc(s.athleteEmail||"")+'" /></div>'+
     '<div class="grid-2">'+
-      '<div class="field"><label class="label">SPORT</label><select class="select" id="pfSport">'+
+      '<div class="field"><label class="label" for="pfSport">SPORT</label><select class="select" id="pfSport">'+
         SPORTS.map(function(x){ return '<option'+(s.sport===x?" selected":"")+'>'+esc(x)+'</option>'; }).join("")+
       '</select></div>'+
-      '<div class="field"><label class="label">EVENT OR DISCIPLINE</label><input class="input" id="pfEvent" value="'+esc(s.event||"")+'" /></div>'+
+      '<div class="field"><label class="label" for="pfEvent">EVENT OR DISCIPLINE</label><input class="input" id="pfEvent" value="'+esc(s.event||"")+'" /></div>'+
     '</div>'+
-    '<div class="field"><label class="label">FEDERATION</label><select class="select" id="pfFed">'+
+    '<div class="field"><label class="label" for="pfFed">FEDERATION</label><select class="select" id="pfFed">'+
       FEDERATIONS.map(function(x){ return '<option'+(s.athleteFed===x?" selected":"")+'>'+esc(x)+'</option>'; }).join("")+
     '</select></div>'+
     '<div class="row" style="gap:10px;justify-content:flex-end">'+

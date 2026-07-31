@@ -13,9 +13,9 @@ Officer.login = function(){
     '<p class="lg-s">Secure access for accredited doping control officers.</p>'+
     '<div class="demo-note"><b>Prototype access.</b> No real authentication is implemented. '+
       'Use any value, or press Sign in to continue as <b>D. Rajapaksa</b>.</div>'+
-    '<div class="field"><label class="label">OFFICER ID OR EMAIL</label>'+
+    '<div class="field"><label class="label" for="lgUser">OFFICER ID OR EMAIL</label>'+
       '<input class="input" id="lgUser" placeholder="d.rajapaksa@example.lk" autocomplete="off" /></div>'+
-    '<div class="field"><label class="label">PASSWORD</label>'+
+    '<div class="field"><label class="label" for="lgPass">PASSWORD</label>'+
       '<input class="input" id="lgPass" type="password" placeholder="••••••••" autocomplete="off" /></div>'+
     '<label class="checkline mt-8" onclick="this.classList.toggle(\'on\')">'+
       '<input type="checkbox" checked />'+
@@ -52,7 +52,7 @@ Officer.dashboard = function(){
   var done = all.filter(function(x){ return x.status === "Completed" || x.status === "Submitted"; });
 
   var rows = all.slice(0,6).map(function(x){
-    return '<tr onclick="viewTest(\''+esc(x.id)+'\')">'+
+    return '<tr '+act("viewTest", x.id)+'>'+
       '<td><div class="cell-strong">'+esc(x.id)+'</div><div class="cell-sub">'+esc(x.comp)+'</div></td>'+
       '<td><div class="row" style="gap:9px"><span class="avatar sm">'+esc(initials(x.athlete))+'</span>'+
         '<span><div class="cell-strong">'+esc(x.athlete)+'</div><div class="cell-sub">'+esc(x.sport)+'</div></span></div></td>'+
@@ -110,7 +110,7 @@ Officer.tests = function(){
   });
 
   var rows = list.map(function(x){
-    return '<tr onclick="viewTest(\''+esc(x.id)+'\')">'+
+    return '<tr '+act("viewTest", x.id)+'>'+
       '<td><div class="cell-strong">'+esc(x.id)+'</div><div class="cell-sub">'+esc(x.officer||"—")+'</div></td>'+
       '<td><div class="row" style="gap:9px"><span class="avatar sm">'+esc(initials(x.athlete))+'</span>'+
         '<span><div class="cell-strong">'+esc(x.athlete)+'</div><div class="cell-sub">'+esc(x.sport)+'</div></span></div></td>'+
@@ -171,9 +171,16 @@ function viewTest(id){
 function exportCSV(){
   var all = (Store.s.submittedTests||[]).concat(TESTS);
   var head = ["Form ID","Athlete","Sport","Competition","Venue","Date","Type","Sample","Status","Officer"];
-  var lines = [head.join(",")].concat(all.map(function(x){
+  // Quoting alone does not stop Excel evaluating a leading =, +, - or @ as
+  // a formula. Prefix those with an apostrophe so they import as text.
+  function cell(v){
+    var s = String(v == null ? "" : v);
+    if(/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g,'""') + '"';
+  }
+  var lines = [head.map(cell).join(",")].concat(all.map(function(x){
     return [x.id,x.athlete,x.sport,x.comp,x.venue,x.date,x.type,x.sample,x.status,x.officer||""]
-      .map(function(v){ return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'; }).join(",");
+      .map(cell).join(",");
   }));
   var blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
   var url = URL.createObjectURL(blob);
@@ -260,7 +267,7 @@ function athleteDetail(id, role){
         (his.length
           ? '<table class="tbl" style="min-width:520px"><thead><tr><th>Form</th><th>Competition</th><th>Date</th><th>Type</th><th>Status</th></tr></thead><tbody>'+
             his.map(function(x){
-              return '<tr onclick="viewTest(\''+esc(x.id)+'\')"><td class="cell-strong">'+esc(x.id)+'</td>'+
+              return '<tr '+act("viewTest", x.id)+'><td class="cell-strong">'+esc(x.id)+'</td>'+
                 '<td>'+esc(x.comp)+'</td><td>'+esc(fmtDate(x.date))+'</td>'+
                 '<td><span class="badge slate">'+esc(x.type)+'</span></td>'+
                 '<td><span class="badge '+statusBadgeCls(x.status)+'">'+esc(x.status)+'</span></td></tr>';
@@ -405,9 +412,10 @@ Officer.newTest = function(){
 function fld(label, path, opts){
   opts = opts || {};
   var val = wizGet(path);
+  var id = "f_" + path.replace(/[^\w]/g, "_");   // ties <label for> to the control
   if(opts.type === "select"){
-    return '<div class="field"><label class="label">'+esc(label)+'</label>'+
-      '<select class="select" onchange="wizSet(\''+path+'\',this.value)">'+
+    return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
+      '<select id="'+id+'" class="select" onchange="wizSet(\''+path+'\',this.value)">'+
         (opts.placeholder ? '<option value=""'+(!val?" selected":"")+'>'+esc(opts.placeholder)+'</option>' : "")+
         opts.options.map(function(o){
           return '<option'+(val===o?" selected":"")+'>'+esc(o)+'</option>';
@@ -415,12 +423,12 @@ function fld(label, path, opts){
       '</select></div>';
   }
   if(opts.type === "textarea"){
-    return '<div class="field"><label class="label">'+esc(label)+'</label>'+
-      '<textarea class="textarea" placeholder="'+esc(opts.placeholder||"")+'" '+
+    return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
+      '<textarea id="'+id+'" class="textarea" placeholder="'+esc(opts.placeholder||"")+'" '+
       'oninput="wizSet(\''+path+'\',this.value)">'+esc(val)+'</textarea></div>';
   }
-  return '<div class="field"><label class="label">'+esc(label)+'</label>'+
-    '<input class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
+  return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
+    '<input id="'+id+'" class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
     'value="'+esc(val)+'" oninput="wizSet(\''+path+'\',this.value)" /></div>';
 }
 function wizGet(path){
@@ -768,15 +776,65 @@ function wizCancel(){
 }
 function wizDiscard(){ Wiz = null; UI.closeModal(); go("officer"); }
 
+/* Advancing a step only validates that step, so a form can reach review
+   with later sections blank. Re-check every mandatory field at submission
+   and send the officer back to the first one that is missing. */
+var REQUIRED = [
+  {step:1, path:"comp.name",       label:"competition name"},
+  {step:1, path:"comp.venue",      label:"venue"},
+  {step:1, path:"comp.date",       label:"date"},
+  {step:1, path:"comp.officer",    label:"doping control officer"},
+  {step:2, path:"ath.name",        label:"athlete name"},
+  {step:2, path:"ath.sport",       label:"athlete sport"},
+  {step:2, path:"ath.dob",         label:"athlete date of birth"},
+  {step:2, path:"ath.gender",      label:"athlete gender"},
+  {step:3, path:"notify.time",     label:"time notified"},
+  {step:3, path:"notify.location", label:"notification location"},
+  {step:3, path:"notify.officer",  label:"notifying officer"},
+  {step:4, path:"sample.codeA",    label:"bottle A code"},
+  {step:4, path:"sample.codeB",    label:"bottle B code"},
+  {step:4, path:"sample.time",     label:"collection time"},
+  {step:5, path:"decl.meds",       label:"medications declaration (enter “None” if nothing was taken)"},
+  {step:5, path:"decl.supps",      label:"supplements declaration (enter “None” if nothing was taken)"}
+];
+
 function wizSubmit(){
   var d = Wiz.data;
+
+  for(var i=0;i<REQUIRED.length;i++){
+    var r = REQUIRED[i];
+    if(!String(wizGet(r.path) || "").trim()){
+      UI.toast("Missing: " + r.label);
+      Wiz.step = r.step;
+      Router.render();
+      return;
+    }
+  }
   if(!d.sig.athlete || !d.sig.officer){
     UI.toast("Athlete and officer signatures are required");
     Wiz.step = 6; Router.render(); return;
   }
   var ref = "DCF-" + new Date().getFullYear() + "-" + String(500 + (Store.s.submittedTests||[]).length).padStart(4,"0");
+
+  // Step 2 tells the officer an unregistered athlete "will be created on
+  // submission". Honour that: mint an ID and add them to the register, so
+  // the test is not orphaned against a dash.
+  if(!d.ath.id){
+    d.ath.id = "ATH-" + (4000 + ATHLETES.length);
+    ATHLETES.push({
+      id:d.ath.id, name:d.ath.name, sport:d.ath.sport,
+      fed:d.ath.fed || SPORT_FED[d.ath.sport] || "—",
+      dob:d.ath.dob || "", gender:d.ath.gender || "—",
+      nat:d.ath.nat || "—", nic:d.ath.nic || "—",
+      status:"Active", tests:0, last:d.comp.date
+    });
+  }
+  var athRec = null;
+  for(var i=0;i<ATHLETES.length;i++){ if(ATHLETES[i].id === d.ath.id){ athRec = ATHLETES[i]; break; } }
+  if(athRec){ athRec.tests = (athRec.tests || 0) + 1; athRec.last = d.comp.date; }
+
   var rec = {
-    id:ref, athlete:d.ath.name, athleteId:d.ath.id || "—", sport:d.ath.sport,
+    id:ref, athlete:d.ath.name, athleteId:d.ath.id, sport:d.ath.sport,
     comp:d.comp.name, venue:d.comp.venue, date:d.comp.date, type:d.comp.type,
     sample:d.sample.type, status:"Submitted", officer:d.comp.officer
   };

@@ -11,6 +11,38 @@ function esc(s){
     .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
+/* ==========================================================================
+   Delegated actions
+   --------------------------------------------------------------------------
+   esc() is an HTML escaper, NOT a JavaScript-string escaper. Interpolating
+   it into an inline handler — onclick="fn('<data>')" — is unsafe, because
+   the HTML parser decodes &#39; back to an apostrophe before the JavaScript
+   is compiled, letting the value break out of its string literal.
+
+   Anything derived from user input, a URL or a third-party API is therefore
+   passed as a data-* attribute (a genuine HTML attribute context, where
+   esc() is correct) and dispatched from a single delegated listener.
+   ========================================================================== */
+var ACTIONS = {};
+function registerAction(name, fn){ ACTIONS[name] = fn; }
+
+/* build the attribute pair for a delegated handler */
+function act(name, arg){
+  return 'data-action="' + esc(name) + '"' +
+         (arg == null ? "" : ' data-arg="' + esc(String(arg)) + '"');
+}
+
+document.addEventListener("click", function(e){
+  var t = e.target;
+  if(!t || !t.closest) return;
+  var el = t.closest("[data-action]");
+  if(!el) return;
+  var fn = ACTIONS[el.getAttribute("data-action")];
+  if(typeof fn !== "function") return;
+  e.preventDefault();
+  fn(el.getAttribute("data-arg"), el, e);
+});
+
 function initials(name){
   return String(name||"").split(/\s+/).map(function(w){ return w[0]||""; }).join("").slice(0,2).toUpperCase();
 }
@@ -169,14 +201,42 @@ var UI = {
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2600);
   },
+  _lastFocus:null,
   modal:function(html){
-    $("#modal").innerHTML = html;
+    this._lastFocus = document.activeElement;
+    var m = $("#modal");
+    m.innerHTML = html;
     $("#modalWrap").classList.add("open");
     $("#modalWrap").setAttribute("aria-hidden","false");
+
+    // name the dialog from its own heading for screen readers
+    var h = m.querySelector("h3");
+    if(h){
+      if(!h.id) h.id = "modalTitle";
+      m.setAttribute("aria-labelledby", h.id);
+    } else {
+      m.removeAttribute("aria-labelledby");
+    }
+    var root = $("#root");
+    if(root) root.setAttribute("inert","");
+    UI._focusFirst(m);
   },
   closeModal:function(){
     $("#modalWrap").classList.remove("open");
     $("#modalWrap").setAttribute("aria-hidden","true");
+    var root = $("#root");
+    if(root) root.removeAttribute("inert");
+    if(this._lastFocus && this._lastFocus.focus){ try{ this._lastFocus.focus(); }catch(e){} }
+    this._lastFocus = null;
+  },
+  _focusables:function(el){
+    return $$('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])', el)
+      .filter(function(n){ return n.offsetParent !== null || n === document.activeElement; });
+  },
+  _focusFirst:function(el){
+    var f = UI._focusables(el);
+    if(f.length) { try{ f[0].focus(); }catch(e){} }
+    else { el.setAttribute("tabindex","-1"); try{ el.focus(); }catch(e){} }
   },
   sheet:function(html){
     $("#sheet").innerHTML = '<div class="grab"></div>' + html;
@@ -205,7 +265,18 @@ var UI = {
 };
 
 document.addEventListener("keydown", function(e){
-  if(e.key === "Escape"){ UI.closeModal(); UI.closeSheet(); Shell.closeDrawer(); }
+  if(e.key === "Escape"){ UI.closeModal(); UI.closeSheet(); Shell.closeDrawer(); return; }
+
+  // keep Tab inside an open dialog rather than letting it walk the page behind
+  if(e.key !== "Tab") return;
+  var wrap = $("#modalWrap").classList.contains("open") ? $("#modal")
+           : ($("#sheetWrap").classList.contains("open") ? $("#sheet") : null);
+  if(!wrap) return;
+  var f = UI._focusables(wrap);
+  if(!f.length) return;
+  var first = f[0], last = f[f.length-1];
+  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
 });
 
 /* ==========================================================================
@@ -627,7 +698,10 @@ var Router = {
     }
 
     this.current = key;
-    document.body.className = def.role || "";
+    // swap only the role class — assigning className wholesale would wipe
+    // state classes such as no-proto (set when the banner is dismissed)
+    document.body.classList.remove("athlete","officer","admin");
+    if(def.role) document.body.classList.add(def.role);
 
     if(!def.role){
       Shell.role = null;
@@ -696,15 +770,19 @@ function notFoundBlock(what, msg, backLabel, backPath){
     '<h4>'+esc(what)+' not found</h4>'+
     '<p>'+esc(msg)+'</p>'+
     '<div class="row" style="justify-content:center;gap:10px;margin-top:22px">'+
-      '<button class="btn" onclick="go(\''+backPath+'\')">'+esc(backLabel)+'</button>'+
-      '<button class="btn ghost" onclick="go(\'\')">Home</button>'+
+      '<button class="btn" '+act("go", backPath)+'>'+esc(backLabel)+'</button>'+
+      '<button class="btn ghost" '+act("go","")+'>Home</button>'+
     '</div>'+
   '</div>';
 }
 
 function backLink(label, path){
-  return '<button class="btn ghost sm mb-16" onclick="'+(path ? "go('"+path+"')" : "goBack()")+'">'+ICON.back+' '+esc(label)+'</button>';
+  return '<button class="btn ghost sm mb-16" '+(path ? act("go", path) : act("back"))+'>'+
+    ICON.back+' '+esc(label)+'</button>';
 }
+
+registerAction("go", function(arg){ go(arg || ""); });
+registerAction("back", function(){ goBack(); });
 
 function statCard(o){
   return '<div class="stat">'+

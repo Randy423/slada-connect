@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ffffff" />
 <meta name="description" content="SLADA Connect — one platform for clean sport. Concept prototype." />
 <title>SLADA Connect — One Platform for Clean Sport</title>
-<link rel="stylesheet" href="assets/css/app.css?v=7" />
+<link rel="stylesheet" href="assets/css/app.css?v=9" />
 </head>
 <body>
 
@@ -14,7 +14,7 @@
 <div class="proto-bar" id="protoBar">
   <span class="proto-dot"></span>
   <span><b>Concept prototype.</b> Not an official product of, or endorsed by, SLADA. Sample data throughout.</span>
-  <button class="proto-x" onclick="document.getElementById('protoBar').remove()" aria-label="Dismiss">&times;</button>
+  <button class="proto-x" onclick="document.getElementById('protoBar').remove();document.body.classList.add('no-proto')" aria-label="Dismiss notice">&times;</button>
 </div>
 
 <div id="root"></div>
@@ -31,11 +31,11 @@
   <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
 </div>
 
-<script src="assets/js/data.js?v=7"></script>
-<script src="assets/js/core.js?v=7"></script>
-<script src="assets/js/athlete.js?v=7"></script>
-<script src="assets/js/officer.js?v=7"></script>
-<script src="assets/js/admin.js?v=7"></script>
-<script src="assets/js/boot.js?v=7"></script>
+<script src="assets/js/data.js?v=9"></script>
+<script src="assets/js/core.js?v=9"></script>
+<script src="assets/js/athlete.js?v=9"></script>
+<script src="assets/js/officer.js?v=9"></script>
+<script src="assets/js/admin.js?v=9"></script>
+<script src="assets/js/boot.js?v=9"></script>
 </body>
 </html>
