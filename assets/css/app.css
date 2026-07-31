@@ -972,11 +972,21 @@ html[data-theme="dark"] .toast{background:#F3F7FC;color:#0B1B34}
 @media (max-width:1000px){body.athlete .toast{bottom:calc(var(--tabbar-h) + 22px)}}
 
 .modal-wrap,.sheet-wrap{position:fixed;inset:0;z-index:1000;display:none}
-.modal-wrap.open,.sheet-wrap.open{display:block}
+.sheet-wrap.open{display:block}
+/* Centred with flexbox, not transform. The pop animation ends on
+   `transform:none`, and animations outrank normal declarations — a
+   translate(-50%,-50%) here is wiped out the moment it finishes, dropping
+   the dialog's top-left corner onto the centre of the screen. */
+.modal-wrap.open{
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;overflow-y:auto;
+}
 .modal-bg,.sheet-bg{position:absolute;inset:0;background:rgba(11,27,52,.5);backdrop-filter:blur(3px);animation:fadeIn .22s both}
 .modal{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(560px,calc(100vw - 32px));max-height:86vh;overflow-y:auto;
+  position:relative;
+  width:min(560px,100%);
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
   background:var(--bg);border-radius:var(--r-xl);padding:28px;
   box-shadow:var(--sh-3);animation:pop .28s var(--ease) both;
 }
