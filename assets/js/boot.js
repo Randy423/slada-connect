@@ -6,7 +6,7 @@ function Landing(){
   var roles = [
     {ic:"🏃", t:"Athlete", d:"Create an account with your sport, then check medications against it, learn the rules and track your progress.",
      to:"athlete", tint:"tint-blue", bg:"bg-blue", cta:"Sign in or create account"},
-    {ic:"👨‍⚕️", t:"Doping Control Officer", d:"Register tests through a guided seven-step workflow with digital signatures and PDF export.",
+    {ic:"👨‍⚕️", t:"Doping Control Officer", d:"Complete the SLADA Doping Control Form digitally — notification, samples, declarations and on-screen signatures.",
      to:"officer", tint:"tint-green", bg:"bg-green", cta:"Officer sign in"},
     {ic:"🛡", t:"Administrator", d:"National analytics, the athlete database, report generation and user management.",
      to:"admin", tint:"tint-violet", bg:"bg-violet", cta:"Open dashboard"},
@@ -24,7 +24,7 @@ function Landing(){
     {ic:"🔍", t:"Live medicine lookup", d:"Search any brand or active ingredient. Results resolve through RxNorm and openFDA, with an explanation of why each substance is treated the way it is.", bg:"bg-blue", tint:"tint-blue"},
     {ic:"🏅", t:"Answers for your sport", d:"Every result says whether it applies to your discipline. Beta-blockers are restricted in shooting and archery but not in athletics — the platform tells you which case you are in.", bg:"bg-violet", tint:"tint-violet"},
     {ic:"⚖️", t:"Safe by design", d:"Anything the platform cannot classify is flagged for verification rather than shown as permitted. A product with an unknown ingredient never reads as green.", bg:"bg-green", tint:"tint-green"},
-    {ic:"✍️", t:"Paperless doping control", d:"A seven-step workflow captures competition, athlete, notification, sample, declaration and on-screen signatures, then produces a printable form.", bg:"bg-violet", tint:"tint-violet"},
+    {ic:"✍️", t:"Paperless doping control", d:"A digital version of SLADA's own Doping Control Form — all four sections, partial samples, specific gravity, research consent and five signature points.", bg:"bg-violet", tint:"tint-violet"},
     {ic:"📊", t:"National oversight", d:"Testing volume, distribution by sport, and in- versus out-of-competition split, with export to PDF, CSV and Excel.", bg:"bg-amber", tint:"tint-amber"},
     {ic:"🌐", t:"Trilingual ready", d:"Interface language switches between English, Sinhala and Tamil, with the structure in place for full content translation.", bg:"bg-blue", tint:"tint-blue"},
     {ic:"📱", t:"Works on any device", d:"Mobile-first and fully responsive, from a phone at the trackside to a desktop at agency headquarters.", bg:"bg-green", tint:"tint-green"}
@@ -167,7 +167,7 @@ route("athlete/settings",      {role:"athlete", title:"Settings",           sub:
 /* --- officer --- */
 route("officer/login",         {role:"officer", bare:true, view:Officer.login});
 route("officer",               {role:"officer", title:"Dashboard",          sub:"Doping Control",    view:Officer.dashboard});
-route("officer/new-test",      {role:"officer", title:"Register New Test",  sub:"Doping control form",view:Officer.newTest, after:Officer.afterNewTest, width:"narrow"});
+route("officer/new-test",      {role:"officer", title:"Doping Control Form", sub:"New test",view:Officer.newTest, after:Officer.afterNewTest, width:"narrow"});
 route("officer/tests",         {role:"officer", title:"Test Records",       sub:"All forms",         view:Officer.tests});
 route("officer/athletes",      {role:"officer", title:"Athletes",           sub:"National register",  view:Officer.athletes});
 route("officer/athlete",       {role:"officer", title:"Athlete Record",     sub:"History",           view:Officer.athleteDetail});

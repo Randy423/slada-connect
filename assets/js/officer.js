@@ -78,7 +78,7 @@ Officer.dashboard = function(){
   '<div class="section-h">Quick actions</div>'+
   '<div class="quick-grid mb-24 stagger">'+
     ['<button class="quick" onclick="go(\'officer/new-test\')"><span class="q-ic bg-blue tint-blue">'+ICON.plus+'</span>'+
-      '<span class="q-t">Register New Test</span><span class="q-s">Start the 7-step workflow</span></button>',
+      '<span class="q-t">New Doping Control Form</span><span class="q-s">Digital doping control form</span></button>',
      '<button class="quick" onclick="go(\'officer/athletes\')"><span class="q-ic bg-green tint-green">'+ICON.users+'</span>'+
       '<span class="q-t">View Athletes</span><span class="q-s">Search the athlete register</span></button>',
      '<button class="quick" onclick="go(\'officer/reports\')"><span class="q-ic bg-violet tint-violet">'+ICON.chart+'</span>'+
@@ -352,85 +352,50 @@ Officer.reports = function(){
 };
 
 /* ==========================================================================
-   Register New Test — 7 step wizard
+   Register New Test — digital Doping Control Form
+   --------------------------------------------------------------------------
+   Mirrors the SLADA paper DCF field for field. The paper form is organised
+   into four numbered sections; the steps below follow that numbering so an
+   officer who knows the paper form recognises every screen.
+
+   Bilingual labels are taken from the form itself.
    ========================================================================== */
 var WIZ_STEPS = [
-  {n:1, t:"Competition"},
-  {n:2, t:"Athlete"},
-  {n:3, t:"Notification"},
-  {n:4, t:"Sample"},
-  {n:5, t:"Declaration"},
-  {n:6, t:"Signatures"},
-  {n:7, t:"Review"}
+  {n:1, t:"Authorities"},
+  {n:2, t:"1 · Notification"},
+  {n:3, t:"2 · Athlete"},
+  {n:4, t:"3 · Analysis"},
+  {n:5, t:"3 · Samples"},
+  {n:6, t:"3 · Declaration"},
+  {n:7, t:"4 · Confirmation"},
+  {n:8, t:"Review"}
 ];
 
 var Wiz = null;
 function newWiz(){
+  var SLADA = "Sri Lanka Anti-Doping Agency";
   return {
     step:1,
     data:{
-      comp:{name:"", venue:"", date:todayISO(), officer:Store.s.officerName, type:"In-Competition"},
-      ath:{id:"", name:"", sport:"", fed:"", dob:"", gender:"", nat:"Sri Lankan", nic:""},
-      notify:{time:nowTime(), location:"", officer:Store.s.officerName, witness:""},
-      sample:{codeA:"", codeB:"", time:nowTime(), type:"Urine"},
-      decl:{meds:"", supps:"", comments:"", conditions:""},
-      sig:{athlete:null, officer:null, witness:null}
+      auth:{ testing:SLADA, collection:SLADA, results:SLADA, mission:"", formNo:"", event:"" },
+      notify:{ family:"", given:"", dob:"", nationality:"Sri Lankan", docType:"", docNo:"",
+               reqUrine:true, reqBlood:false, date:todayISO(), time:nowTime(),
+               dcoName:Store.s.officerName, dcoSig:null, athleteSig:null },
+      info:{ arrival:nowTime(), street:"", city:"", province:"", country:"Sri Lanka",
+             tel:"", email:"", doctor:"", coach:"" },
+      analysis:{ testType:"In-Competition", collectionDate:todayISO(), gender:"", sport:"", discipline:"" },
+      partial:[{no:"",vol:"",sealed:"",initials:""},{no:"",vol:"",sealed:"",initials:""}],
+      samples:[{type:"U", vol:"", sealed:"", code:"", sg:"", witness:""}],
+      decl:{ meds:"", suppNo:"", research:"" },
+      confirm:{ comments:"", suppNo:"", repName:"", repPosition:"", repSig:null,
+                dcoName:Store.s.officerName, dcoSig:null, date:todayISO(),
+                completed:"", athleteSig:null },
+      athleteId:""
     }
   };
 }
 
-Officer.newTest = function(){
-  if(!Wiz) Wiz = newWiz();
-  var step = Wiz.step;
-  var pct = Math.round((step-1)/(WIZ_STEPS.length-1)*100);
-
-  var stepper = WIZ_STEPS.map(function(s){
-    var cls = s.n === step ? "step on" : (s.n < step ? "step done" : "step");
-    return '<button class="'+cls+'" onclick="wizGo('+s.n+')">'+
-      '<span class="st-n">'+(s.n < step ? "✓" : s.n)+'</span>'+esc(s.t)+'</button>';
-  }).join("");
-
-  var body = [wizStep1,wizStep2,wizStep3,wizStep4,wizStep5,wizStep6,wizStep7][step-1]();
-
-  return '<div class="row-b wrap mb-8">'+
-      '<div><h1 style="font-size:clamp(21px,3.2vw,28px);font-weight:820">Register new test</h1>'+
-      '<p class="muted mt-8" style="font-size:14px">Step '+step+' of 7 · '+esc(WIZ_STEPS[step-1].t)+'</p></div>'+
-      '<button class="btn ghost sm" onclick="wizCancel()">'+ICON.x+' Cancel</button>'+
-    '</div>'+
-    '<div class="stepper">'+stepper+'</div>'+
-    '<div class="wizard-bar"><i style="width:'+pct+'%"></i></div>'+
-    '<div class="card pad" id="wizBody">'+body+'</div>'+
-    '<div class="wiz-foot">'+
-      (step > 1 ? '<button class="btn ghost" onclick="wizPrev()">'+ICON.back+' Back</button>' : '<span></span>')+
-      (step < 7
-        ? '<button class="btn" onclick="wizNext()">Continue '+ICON.arrow+'</button>'
-        : '<div class="row" style="gap:10px"><button class="btn ghost" onclick="window.print()">'+ICON.dl+' Download PDF</button>'+
-          '<button class="btn green" onclick="wizSubmit()">'+ICON.shield+' Submit to SLADA</button></div>')+
-    '</div>';
-};
-
-function fld(label, path, opts){
-  opts = opts || {};
-  var val = wizGet(path);
-  var id = "f_" + path.replace(/[^\w]/g, "_");   // ties <label for> to the control
-  if(opts.type === "select"){
-    return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
-      '<select id="'+id+'" class="select" onchange="wizSet(\''+path+'\',this.value)">'+
-        (opts.placeholder ? '<option value=""'+(!val?" selected":"")+'>'+esc(opts.placeholder)+'</option>' : "")+
-        opts.options.map(function(o){
-          return '<option'+(val===o?" selected":"")+'>'+esc(o)+'</option>';
-        }).join("")+
-      '</select></div>';
-  }
-  if(opts.type === "textarea"){
-    return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
-      '<textarea id="'+id+'" class="textarea" placeholder="'+esc(opts.placeholder||"")+'" '+
-      'oninput="wizSet(\''+path+'\',this.value)">'+esc(val)+'</textarea></div>';
-  }
-  return '<div class="field"><label class="label" for="'+id+'">'+esc(label)+'</label>'+
-    '<input id="'+id+'" class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
-    'value="'+esc(val)+'" oninput="wizSet(\''+path+'\',this.value)" /></div>';
-}
+/* ---------- field helpers ---------- */
 function wizGet(path){
   var p = path.split("."), o = Wiz.data;
   for(var i=0;i<p.length;i++){ o = o[p[i]]; if(o === undefined) return ""; }
@@ -442,57 +407,115 @@ function wizSet(path, v){
   o[p[p.length-1]] = v;
 }
 
-/* --- step 1: competition --- */
-function wizStep1(){
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Competition information</h4>'+
-    '<p class="muted mb-24" style="font-size:14px">Where and when the test is being conducted.</p>'+
-    fld("COMPETITION","comp.name",{placeholder:"e.g. National Athletics Championship"})+
-    fld("VENUE","comp.venue",{placeholder:"e.g. Diyagama Stadium, Homagama"})+
-    '<div class="grid-2">'+
-      fld("DATE","comp.date",{type:"date"})+
-      fld("TEST TYPE","comp.type",{type:"select",options:["In-Competition","Out-of-Competition"]})+
-    '</div>'+
-    fld("DOPING CONTROL OFFICER","comp.officer",{placeholder:"Officer name"});
+/* label with the Sinhala wording used on the paper form */
+function lbl(en, si){
+  return esc(en) + (si ? ' <span style="font-weight:600;color:var(--faint)">· '+esc(si)+'</span>' : '');
 }
 
-/* --- step 2: athlete --- */
-var wizAthQuery = "";
-function wizStep2(){
-  var q = wizAthQuery.toLowerCase();
-  var matches = q ? ATHLETES.filter(function(a){
-    return (a.name+" "+a.sport+" "+a.id).toLowerCase().indexOf(q) !== -1;
-  }).slice(0,5) : [];
+function fld(label, path, opts){
+  opts = opts || {};
+  var val = wizGet(path);
+  var id = "f_" + path.replace(/[^\w]/g, "_");
+  var lab = '<label class="label" for="'+id+'">'+label+'</label>';
+  if(opts.type === "select"){
+    return '<div class="field">'+lab+
+      '<select id="'+id+'" class="select" onchange="wizSet(\''+path+'\',this.value)">'+
+        (opts.placeholder ? '<option value=""'+(!val?" selected":"")+'>'+esc(opts.placeholder)+'</option>' : "")+
+        opts.options.map(function(o){ return '<option'+(val===o?" selected":"")+'>'+esc(o)+'</option>'; }).join("")+
+      '</select></div>';
+  }
+  if(opts.type === "textarea"){
+    return '<div class="field">'+lab+
+      '<textarea id="'+id+'" class="textarea" style="min-height:'+(opts.h||96)+'px" placeholder="'+esc(opts.placeholder||"")+'" '+
+      'oninput="wizSet(\''+path+'\',this.value)">'+esc(val)+'</textarea></div>';
+  }
+  return '<div class="field">'+lab+
+    '<input id="'+id+'" class="input" type="'+(opts.type||"text")+'" placeholder="'+esc(opts.placeholder||"")+'" '+
+    'value="'+esc(val)+'" oninput="wizSet(\''+path+'\',this.value)" /></div>';
+}
 
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Athlete information</h4>'+
-    '<p class="muted mb-16" style="font-size:14px">Search the register, or enter the details manually if the athlete is not yet registered.</p>'+
-    '<div class="search-inline mb-12" style="height:48px">'+
-      '<span style="color:var(--faint)">'+ICON.search+'</span>'+
-      '<input placeholder="Search athlete by name, sport or ID" value="'+esc(wizAthQuery)+'" oninput="wizAthSearch(this.value)" />'+
+function sigField(label, path){
+  var signed = !!wizGet(path);
+  return '<div class="field">'+
+    '<div class="row-b mb-8"><label class="label" style="margin:0">'+label+'</label>'+
+      '<div class="row" style="gap:8px">'+
+        (signed ? '<span class="badge green">Signed</span>' : '<span class="badge slate">Not signed</span>')+
+        '<button class="btn ghost sm" '+act("clearSig", path)+'>Clear</button></div></div>'+
+    '<div class="sigpad'+(signed?" signed":"")+'" data-sig="'+esc(path)+'">'+
+      '<canvas></canvas><div class="sig-hint">Draw signature here</div></div>'+
+  '</div>';
+}
+
+/* ---------- step 1 · authorities and mission ---------- */
+function wizStep1(){
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Authorities</h4>'+
+    '<p class="muted mb-24" style="font-size:14px">The three authorities printed at the head of the form, and the test mission this sample belongs to.</p>'+
+    fld(lbl("TESTING AUTHORITY","පරීක්ෂණ බලධාරිය"),"auth.testing")+
+    fld(lbl("SAMPLE COLLECTION AUTHORITY","සාම්පල ලබාගැනීමේ බලධාරිය"),"auth.collection")+
+    fld(lbl("RESULTS MANAGEMENT AUTHORITY","ප්‍රතිඵල කළමනාකරණ බලධාරිය"),"auth.results")+
+    '<div class="grid-2">'+
+      fld(lbl("TEST MISSION CODE","පරීක්ෂණ මෙහෙවර කේත අංකය"),"auth.mission",{placeholder:"e.g. SLADA-2026-0412"})+
+      fld(lbl("FORM NUMBER","ආකෘති පත්‍ර අංකය"),"auth.formNo",{placeholder:"Pre-printed number, e.g. 201"})+
     '</div>'+
-    '<div id="wizAthResults">'+wizAthResults(matches)+'</div>'+
+    fld("EVENT OR COMPETITION","auth.event",{placeholder:"For SLADA scheduling records"})+
+    '<div class="src-note"><span>'+ICON.info+'</span><span>Event or competition is <b>not a field on the DCF</b> — it is captured here only so the test appears correctly in SLADA\'s own scheduling and reporting views.</span></div>';
+}
+
+/* ---------- step 2 · section 1, athlete notification ---------- */
+function wizStep2(){
+  var d = Wiz.data.notify;
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">1 · Athlete Notification'+
+      ' <span style="font-weight:600;color:var(--faint);font-size:13px">· ක්‍රීඩකයා/ක්‍රීඩිකාව හට දැනුම් දීම</span></h4>'+
+    '<p class="muted mb-16" style="font-size:14px">Search the register to fill these automatically, or enter them by hand.</p>'+
+    '<div class="search-inline mb-16" style="height:46px"><span style="color:var(--faint)">'+ICON.search+'</span>'+
+      '<input placeholder="Search athlete by name, sport or ID" value="'+esc(wizAthQuery)+'" oninput="wizAthSearch(this.value)" /></div>'+
+    '<div id="wizAthResults">'+wizAthResults(wizAthMatches())+'</div>'+
     '<div class="divider"></div>'+
-    '<div class="row-b mb-16"><h5 style="font-size:13px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)">Athlete details</h5>'+
-      (Wiz.data.ath.id ? '<span class="badge green">From register · '+esc(Wiz.data.ath.id)+'</span>' : '<span class="badge slate">Manual entry</span>')+
-    '</div>'+
-    fld("FULL NAME","ath.name",{placeholder:"Athlete full name"})+
     '<div class="grid-2">'+
-      fld("SPORT","ath.sport",{type:"select",placeholder:"Select sport",options:SPORTS})+
-      fld("FEDERATION","ath.fed",{type:"select",placeholder:"Select federation",options:FEDERATIONS})+
+      fld(lbl("FAMILY NAME","වාසගම"),"notify.family")+
+      fld(lbl("GIVEN NAME","නම"),"notify.given")+
     '</div>'+
     '<div class="grid-2">'+
-      fld("DATE OF BIRTH","ath.dob",{type:"date"})+
-      fld("GENDER","ath.gender",{type:"select",placeholder:"Select",options:["Male","Female","Other"]})+
+      fld(lbl("DATE OF BIRTH","උපන් දිනය"),"notify.dob",{type:"date"})+
+      fld(lbl("NATIONALITY","ජාතිය"),"notify.nationality")+
     '</div>'+
     '<div class="grid-2">'+
-      fld("NATIONALITY","ath.nat",{placeholder:"e.g. Sri Lankan"})+
-      fld("PASSPORT OR NATIONAL ID","ath.nic",{placeholder:"Identification number"})+
-    '</div>';
+      fld(lbl("DOCUMENT TYPE","ලේඛන වර්ගය"),"notify.docType",{type:"select",placeholder:"Select",options:["National ID","Passport","Driving Licence","Federation ID","Other"]})+
+      fld(lbl("DOCUMENT NUMBER","ලේඛන අංකය"),"notify.docNo")+
+    '</div>'+
+
+    '<div class="label mt-8">'+lbl("TYPE OF SAMPLE REQUIRED","අවශ්‍ය සාම්පල වර්ගය")+'</div>'+
+    '<div class="row wrap mb-16" style="gap:10px">'+
+      '<button class="chip'+(d.reqUrine?" on":"")+'" '+act("wizToggle","notify.reqUrine")+'>Urine · මුත්‍රා</button>'+
+      '<button class="chip'+(d.reqBlood?" on":"")+'" '+act("wizToggle","notify.reqBlood")+'>Blood · රුධිර</button>'+
+    '</div>'+
+
+    '<div class="grid-2">'+
+      fld(lbl("DATE","දිනය"),"notify.date",{type:"date"})+
+      fld(lbl("TIME","වේලාව"),"notify.time",{type:"time"})+
+    '</div>'+
+    fld(lbl("DCO / CHAPERONE NAME","උත්තේජක පාලන නිලධාරි නම"),"notify.dcoName")+
+    sigField(lbl("DCO / CHAPERONE SIGNATURE","නිලධාරි අත්සන"),"notify.dcoSig")+
+
+    '<div class="info-card mt-8"><h4>Athlete acknowledgement</h4>'+
+      '<p style="font-size:13.5px">I hereby acknowledge that I have received and read this notice, including the athlete rights and responsibilities text on the overleaf of Copy 4, and I consent to provide sample(s) as requested. I understand that failure or refusal to provide a sample may constitute an anti-doping rule violation.</p>'+
+    '</div>'+
+    sigField(lbl("ATHLETE'S SIGNATURE","ක්‍රීඩකයා/ක්‍රීඩිකාවගේ අත්සන"),"notify.athleteSig");
+}
+
+var wizAthQuery = "";
+function wizAthMatches(){
+  var q = wizAthQuery.toLowerCase();
+  if(!q) return [];
+  return ATHLETES.filter(function(a){
+    return (a.name+" "+a.sport+" "+a.id).toLowerCase().indexOf(q) !== -1;
+  }).slice(0,5);
 }
 function wizAthResults(matches){
-  if(!wizAthQuery) return '<p class="muted" style="font-size:13px;padding:4px 2px">Start typing to search the athlete register.</p>';
-  if(!matches.length) return '<div class="info-card"><p class="muted" style="font-size:13.5px;margin:0">No athlete found. Enter the details manually below — the record will be created on submission.</p></div>';
+  if(!wizAthQuery) return '<p class="muted" style="font-size:13px;padding:2px">Start typing to search the athlete register.</p>';
+  if(!matches.length) return '<div class="info-card"><p class="muted" style="font-size:13.5px;margin:0">No athlete found. Enter the details below — the record will be created when the form is submitted.</p></div>';
   return '<div class="card" style="padding:4px 16px">'+matches.map(function(a){
-    return '<button class="listrow" onclick="wizPickAthlete(\''+a.id+'\')">'+
+    return '<button class="listrow" '+act("wizPickAthlete", a.id)+'>'+
       '<span class="avatar sm">'+esc(initials(a.name))+'</span>'+
       '<span class="grow"><span class="lr-t" style="display:block">'+esc(a.name)+'</span>'+
       '<span class="lr-s" style="display:block">'+esc(a.sport)+' · '+esc(a.id)+'</span></span>'+
@@ -501,142 +524,469 @@ function wizAthResults(matches){
 }
 function wizAthSearch(v){
   wizAthQuery = v;
-  var q = v.toLowerCase();
-  var matches = q ? ATHLETES.filter(function(a){
-    return (a.name+" "+a.sport+" "+a.id).toLowerCase().indexOf(q) !== -1;
-  }).slice(0,5) : [];
   var el = $("#wizAthResults");
-  if(el) el.innerHTML = wizAthResults(matches);
+  if(el) el.innerHTML = wizAthResults(wizAthMatches());
 }
-function wizPickAthlete(id){
+registerAction("wizPickAthlete", function(id){
   var a = null;
   for(var i=0;i<ATHLETES.length;i++){ if(ATHLETES[i].id === id){ a = ATHLETES[i]; break; } }
   if(!a) return;
-  Wiz.data.ath = {id:a.id, name:a.name, sport:a.sport, fed:a.fed, dob:a.dob, gender:a.gender, nat:a.nat, nic:a.nic};
+  var parts = a.name.split(" ");
+  var d = Wiz.data;
+  d.athleteId = a.id;
+  d.notify.given = parts.slice(0,-1).join(" ") || a.name;
+  d.notify.family = parts.length > 1 ? parts[parts.length-1] : "";
+  d.notify.dob = a.dob;
+  d.notify.nationality = a.nat;
+  d.notify.docType = "National ID";
+  d.notify.docNo = a.nic;
+  d.analysis.sport = a.sport;
+  d.analysis.gender = a.gender;
   wizAthQuery = "";
   Router.render();
   UI.toast("Athlete loaded from register");
-}
+});
+registerAction("wizToggle", function(path){
+  wizSet(path, !wizGet(path));
+  Router.render();
+});
+registerAction("clearSig", function(path){ wizSet(path, null); Router.render(); });
 
-/* --- step 3: notification --- */
+/* ---------- step 3 · section 2, athlete information ---------- */
 function wizStep3(){
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Notification record</h4>'+
-    '<p class="muted mb-24" style="font-size:14px">Record when and where the athlete was notified of selection, and who was present.</p>'+
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">2 · Athlete Information'+
+      ' <span style="font-weight:600;color:var(--faint);font-size:13px">· ක්‍රීඩකයාගේ තොරතුරු</span></h4>'+
+    '<p class="muted mb-24" style="font-size:14px">Contact details for results management, and the athlete\'s doctor and coach.</p>'+
+    fld(lbl("ARRIVAL TIME AT DOPING CONTROL STATION","උත්තේජක පාලන ස්ථානයට පැමිණි වේලාව"),"info.arrival",{type:"time"})+
+    fld(lbl("NUMBER / STREET","අංකය / විදිය"),"info.street")+
     '<div class="grid-2">'+
-      fld("TIME NOTIFIED","notify.time",{type:"time"})+
-      fld("LOCATION","notify.location",{placeholder:"e.g. Warm-up track, Gate 3"})+
+      fld(lbl("CITY / TOWN","නගරය"),"info.city")+
+      fld(lbl("STATE / PROVINCE","පළාත"),"info.province")+
     '</div>'+
     '<div class="grid-2">'+
-      fld("NOTIFYING OFFICER","notify.officer",{placeholder:"Officer name"})+
-      fld("WITNESS / CHAPERONE","notify.witness",{placeholder:"Witness name"})+
+      fld(lbl("COUNTRY","රට"),"info.country")+
+      fld(lbl("CONTACT TEL","දුරකථන අංකය"),"info.tel",{type:"tel"})+
     '</div>'+
-    '<div class="info-card mt-8"><h4>'+ICON.info+' Athlete rights</h4>'+
-      '<p>Confirm the athlete has been informed of their right to a representative, to request an interpreter, and to request a delay for a valid reason. '+
-      'Any concern raised must be recorded in the declaration step.</p></div>';
-}
-
-/* --- step 4: sample collection --- */
-function wizStep4(){
-  var d = Wiz.data.sample;
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Sample collection</h4>'+
-    '<p class="muted mb-24" style="font-size:14px">Scan or enter the bottle codes. The athlete seals the bottles and confirms the codes match the form.</p>'+
+    fld(lbl("E-MAIL","විද්‍යුත් තැපැල්"),"info.email",{type:"email"})+
     '<div class="grid-2">'+
-      '<div class="field"><label class="label">BOTTLE A CODE</label>'+
-        '<div class="row" style="gap:8px">'+
-          '<input class="input" id="codeA" placeholder="e.g. A 1234567" value="'+esc(d.codeA)+'" oninput="wizSet(\'sample.codeA\',this.value);drawBarcode()" />'+
-          '<button class="btn ghost" style="flex:0 0 auto" onclick="scanBottle(\'A\')">Scan</button>'+
-        '</div></div>'+
-      '<div class="field"><label class="label">BOTTLE B CODE</label>'+
-        '<div class="row" style="gap:8px">'+
-          '<input class="input" id="codeB" placeholder="e.g. B 1234567" value="'+esc(d.codeB)+'" oninput="wizSet(\'sample.codeB\',this.value);drawBarcode()" />'+
-          '<button class="btn ghost" style="flex:0 0 auto" onclick="scanBottle(\'B\')">Scan</button>'+
-        '</div></div>'+
-    '</div>'+
-    '<div class="card pad mb-16" style="background:var(--bg-soft)">'+
-      '<div class="row-b mb-12"><span class="label" style="margin:0">KIT BARCODE</span>'+
-        '<span class="badge '+(d.codeA&&d.codeB?"green":"slate")+'">'+(d.codeA&&d.codeB?"Both bottles recorded":"Awaiting scan")+'</span></div>'+
-      '<div class="barcode" id="barcode"></div>'+
-      '<p class="muted mt-8" style="font-size:11.5px;margin:8px 0 0">Prototype: the Scan button simulates a barcode reader. '+
-        'A production build would use the device camera or a paired scanner.</p>'+
-    '</div>'+
-    '<div class="grid-2">'+
-      fld("COLLECTION TIME","sample.time",{type:"time"})+
-      fld("SAMPLE TYPE","sample.type",{type:"select",options:["Urine","Blood","Both"]})+
+      fld(lbl("DOCTOR'S NAME","වෛද්‍යවරයාගේ නම"),"info.doctor")+
+      fld(lbl("COACH'S NAME","පුහුණුකරුගේ නම"),"info.coach")+
     '</div>';
 }
-function scanBottle(which){
-  var code = which + " " + (1000000 + Math.floor(Math.random()*8999999));
-  wizSet("sample.code"+which, code);
-  var el = $("#code"+which);
-  if(el) el.value = code;
-  drawBarcode();
-  var badge = $("#wizBody .badge");
-  UI.toast("Bottle " + which + " scanned · " + code);
-  var d = Wiz.data.sample;
-  if(d.codeA && d.codeB){
-    var b = $("#wizBody .card .badge");
-    if(b){ b.className = "badge green"; b.textContent = "Both bottles recorded"; }
-  }
-}
-function drawBarcode(){
-  var el = $("#barcode");
-  if(!el) return;
-  var seed = (Wiz.data.sample.codeA + Wiz.data.sample.codeB) || "";
-  if(!seed){ el.innerHTML = '<span class="muted" style="font-size:12.5px">No code scanned yet</span>'; return; }
-  var h = 0, bars = "";
-  for(var i=0;i<seed.length;i++) h = (h*31 + seed.charCodeAt(i)) >>> 0;
-  for(var j=0;j<58;j++){
-    h = (h * 1103515245 + 12345) >>> 0;
-    var w = 1 + (h % 4);
-    var pale = (h >> 8) % 3 === 0;
-    bars += '<i style="width:'+w+'px;opacity:'+(pale?".25":"1")+'"></i>';
-  }
-  el.innerHTML = bars;
-}
 
-/* --- step 5: declaration --- */
+/* ---------- step 4 · section 3, information for analysis ---------- */
+function wizStep4(){
+  var d = Wiz.data.analysis;
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">3 · Information for Analysis'+
+      ' <span style="font-weight:600;color:var(--faint);font-size:13px">· විශ්ලේෂණය සඳහා තොරතුරු</span></h4>'+
+    '<p class="muted mb-16" style="font-size:14px">Sent to the laboratory with the sample.</p>'+
+    '<div class="label">'+lbl("TEST TYPE","පරීක්ෂණ වර්ගය")+'</div>'+
+    '<div class="row wrap mb-16" style="gap:10px">'+
+      ['In-Competition','Out-of-Competition'].map(function(o){
+        return '<button class="chip'+(d.testType===o?" on":"")+'" '+act("wizTestType", o)+'>'+esc(o)+'</button>';
+      }).join("")+
+    '</div>'+
+    fld(lbl("SAMPLE COLLECTION DATE","සාම්පල ලබාගත් දිනය"),"analysis.collectionDate",{type:"date"})+
+    '<div class="label">'+lbl("GENDER","ස්ත්‍රී/පුරුෂ භාවය")+'</div>'+
+    '<div class="row wrap mb-16" style="gap:10px">'+
+      ['Male','Female'].map(function(o){
+        return '<button class="chip'+(d.gender===o?" on":"")+'" '+act("wizGender", o)+'>'+esc(o)+'</button>';
+      }).join("")+
+    '</div>'+
+    '<div class="grid-2">'+
+      fld(lbl("SPORT","ක්‍රීඩාව"),"analysis.sport",{type:"select",placeholder:"Select sport",options:SPORTS})+
+      fld(lbl("DISCIPLINE","ක්‍රීඩා අංශය"),"analysis.discipline",{placeholder:"e.g. 400m, 50m rifle"})+
+    '</div>';
+}
+registerAction("wizTestType", function(v){ wizSet("analysis.testType", v); Router.render(); });
+registerAction("wizGender", function(v){ wizSet("analysis.gender", v); Router.render(); });
+
+/* ---------- step 5 · section 3, partial samples and sample table ---------- */
 function wizStep5(){
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Athlete declaration</h4>'+
-    '<p class="muted mb-24" style="font-size:14px">The athlete declares everything taken recently. This is their protection as much as the agency\'s record.</p>'+
-    fld("CURRENT MEDICATIONS","decl.meds",{type:"textarea",placeholder:"Medicine, dose, route and approximate date taken. Include anything taken in the last 7 days."})+
-    fld("SUPPLEMENTS","decl.supps",{type:"textarea",placeholder:"Product name, brand, batch number where known."})+
-    fld("MEDICAL CONDITIONS / TUE","decl.conditions",{type:"textarea",placeholder:"Relevant conditions and any approved Therapeutic Use Exemption reference."})+
-    fld("COMMENTS OR CONCERNS","decl.comments",{type:"textarea",placeholder:"Any irregularity in the procedure the athlete wishes to record."})+
-    '<div class="info-card warn"><h4>⚠️ Declare everything</h4>'+
-      '<p>Under strict liability the athlete is responsible for any prohibited substance found in the sample. '+
-      'A complete declaration is the strongest evidence available if a finding later needs to be explained.</p></div>'+
-    '<button class="btn soft block mt-16" onclick="go(\'athlete/check\')">'+ICON.search+' Check a medicine before declaring</button>';
-}
+  var d = Wiz.data;
 
-/* --- step 6: signatures --- */
-function wizStep6(){
-  var who = [
-    {k:"athlete", label:"Athlete", name:Wiz.data.ath.name || "Athlete"},
-    {k:"officer", label:"Doping Control Officer", name:Wiz.data.comp.officer || Store.s.officerName},
-    {k:"witness", label:"Witness", name:Wiz.data.notify.witness || "Witness"}
-  ].map(function(w){
-    var signed = !!Wiz.data.sig[w.k];
-    return '<div class="field">'+
-      '<div class="row-b mb-8"><label class="label" style="margin:0">'+esc(w.label.toUpperCase())+' — '+esc(w.name)+'</label>'+
-        '<div class="row" style="gap:8px">'+
-          (signed ? '<span class="badge green">Signed</span>' : '<span class="badge slate">Not signed</span>')+
-          '<button class="btn ghost sm" onclick="clearSig(\''+w.k+'\')">Clear</button>'+
-        '</div></div>'+
-      '<div class="sigpad'+(signed?" signed":"")+'" data-sig="'+w.k+'">'+
-        '<canvas></canvas><div class="sig-hint">Draw signature here</div>'+
-      '</div></div>';
+  var partials = d.partial.map(function(p, i){
+    return '<div class="card pad mb-12" style="background:var(--bg-soft)">'+
+      '<div class="row-b mb-12"><b style="font-size:13.5px">Partial sample '+(i+1)+'</b></div>'+
+      '<div class="grid-2">'+
+        fld("PARTIAL SAMPLE NUMBER","partial."+i+".no")+
+        fld("VOL (ml)","partial."+i+".vol",{type:"number"})+
+      '</div>'+
+      '<div class="grid-2">'+
+        fld("TIME SEALED","partial."+i+".sealed",{type:"time"})+
+        fld("ATHLETE / DCO INITIALS","partial."+i+".initials")+
+      '</div>'+
+    '</div>';
   }).join("");
 
-  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">Digital signatures</h4>'+
-    '<p class="muted mb-24" style="font-size:14px">Each party signs directly on screen using a finger, stylus or mouse.</p>'+
-    who+
-    '<div class="src-note"><span>'+ICON.info+'</span><span>Signatures are captured as images and held only on this device in the prototype. '+
-      'A production system would bind them cryptographically to the submitted form.</span></div>';
+  var rows = d.samples.map(function(s, i){
+    return '<div class="card pad mb-12">'+
+      '<div class="row-b mb-12">'+
+        '<b style="font-size:13.5px">Sample '+(i+1)+'</b>'+
+        '<div class="row" style="gap:8px">'+
+          '<button class="chip'+(s.type==="U"?" on":"")+'" '+act("wizSampleType", i+":U")+'>U · මුත්‍රා</button>'+
+          '<button class="chip'+(s.type==="B"?" on":"")+'" '+act("wizSampleType", i+":B")+'>B · රුධිර</button>'+
+          (d.samples.length>1 ? '<button class="iconbtn" '+act("wizRemoveSample", i)+' aria-label="Remove sample">'+ICON.x+'</button>' : '')+
+        '</div></div>'+
+      '<div class="grid-2">'+
+        fld(lbl("SAMPLE CODE NUMBER","සාම්පල කේත අංකය"),"samples."+i+".code")+
+        fld(lbl("VOL (ml)","පරිමාව"),"samples."+i+".vol",{type:"number",placeholder:"90 minimum for urine"})+
+      '</div>'+
+      '<div class="grid-2">'+
+        fld(lbl("TIME SEALED","මුද්‍රා තැබූ වේලාව"),"samples."+i+".sealed",{type:"time"})+
+        fld(lbl("SPECIFIC GRAVITY","විශිෂ්ට ගුරුත්වය"),"samples."+i+".sg",{placeholder:"e.g. 1.021"})+
+      '</div>'+
+      fld(lbl("URINE SAMPLE WITNESS / BCO NAME","සාක්ෂිකරුගේ නම"),"samples."+i+".witness")+
+      (s.type==="U" && s.vol && +s.vol < 90
+        ? '<div class="info-card warn"><h4>⚠️ Below 90 ml</h4><p>A urine sample under 90 ml is not suitable for analysis. Record the partial sample above and continue collection.</p></div>'
+        : "")+
+      (s.type==="U" && s.sg && parseFloat(s.sg) > 0 && parseFloat(s.sg) < 1.005
+        ? '<div class="info-card warn"><h4>⚠️ Specific gravity below 1.005</h4><p>This sample may be too dilute for analysis. Follow the suitability procedure before releasing the athlete.</p></div>'
+        : "")+
+    '</div>';
+  }).join("");
+
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">3 · Samples'+
+      ' <span style="font-weight:600;color:var(--faint);font-size:13px">· සාම්පල</span></h4>'+
+    '<p class="muted mb-16" style="font-size:14px">Record any partial samples first, then each sealed sample.</p>'+
+    '<div class="section-h" style="margin-top:0">'+lbl("PARTIAL SAMPLE","අර්ධ සාම්පල")+'</div>'+
+    partials+
+    '<div class="section-h">Sealed samples</div>'+
+    rows+
+    (d.samples.length < 4
+      ? '<button class="btn ghost block" '+act("wizAddSample")+'>'+ICON.plus+' Add another sample</button>'
+      : '<p class="muted center" style="font-size:12.5px">The paper form holds four sample rows.</p>');
+}
+registerAction("wizAddSample", function(){
+  if(Wiz.data.samples.length < 4){
+    Wiz.data.samples.push({type:"U", vol:"", sealed:"", code:"", sg:"", witness:""});
+    Router.render();
+  }
+});
+registerAction("wizRemoveSample", function(i){
+  Wiz.data.samples.splice(+i,1); Router.render();
+});
+registerAction("wizSampleType", function(arg){
+  var p = String(arg).split(":");
+  Wiz.data.samples[+p[0]].type = p[1];
+  Router.render();
+});
+
+/* ---------- step 6 · section 3, declaration and consent ---------- */
+function wizStep6(){
+  var research = Wiz.data.decl.research;
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">3 · Declaration of Medication Use and Blood Transfusions</h4>'+
+    '<p class="muted mb-16" style="font-size:14px">List any prescription or non-prescription medications or supplements — for example beta-2 agonists and glucocorticoids — taken over the past 7 days, including dosage and the date last taken where possible. If a blood sample was collected, list any blood transfusions received over the last three months.</p>'+
+    fld(lbl("DECLARATION","ප්‍රකාශය"),"decl.meds",{type:"textarea",h:150,placeholder:"Medicine or supplement, dose, route, date last taken. Enter “None” if nothing was taken."})+
+    '<button class="btn soft block mb-16" '+act("go","athlete/check")+'>'+ICON.search+' Check a medicine before declaring</button>'+
+    fld("SUPPLEMENTARY REPORT FORM NUMBER","decl.suppNo",{placeholder:"If used"})+
+
+    '<div class="section-h">'+lbl("CONSENT FOR RESEARCH","පර්යේෂණ සඳහා කැමැත්ත")+'</div>'+
+    '<div class="info-card mb-12"><p style="font-size:13.5px">I consent for my sample to be used in anonymous research (see overleaf).</p></div>'+
+    '<div class="row wrap" style="gap:10px">'+
+      '<button class="chip'+(research==="accept"?" on":"")+'" '+act("wizResearch","accept")+'>I accept · මා පිළිගනිමි</button>'+
+      '<button class="chip'+(research==="refuse"?" on":"")+'" '+act("wizResearch","refuse")+'>I refuse · මා ප්‍රතික්ෂේප කරමි</button>'+
+    '</div>';
+}
+registerAction("wizResearch", function(v){ wizSet("decl.research", v); Router.render(); });
+
+/* ---------- step 7 · section 4, confirmation ---------- */
+function wizStep7(){
+  return '<h4 style="font-size:16px;font-weight:750;margin-bottom:6px">4 · Confirmation of Procedure'+
+      ' <span style="font-weight:600;color:var(--faint);font-size:13px">· ක්‍රියාපටිපාටිය සනාථ කිරීම</span></h4>'+
+    '<p class="muted mb-24" style="font-size:14px">Comments, the athlete\'s representative, and the closing signatures.</p>'+
+    fld(lbl("COMMENTS","අදහස්"),"confirm.comments",{type:"textarea",placeholder:"Any comments should be noted here. If necessary continue on a supplementary report form."})+
+    fld("SUPPLEMENTARY REPORT FORM NUMBER","confirm.suppNo",{placeholder:"If used"})+
+
+    '<div class="section-h">'+lbl("ATHLETE REPRESENTATIVE","ක්‍රීඩකයාගේ නියෝජිතයා")+'</div>'+
+    '<div class="grid-2">'+
+      fld(lbl("NAME","නම"),"confirm.repName")+
+      fld(lbl("POSITION","තනතුර"),"confirm.repPosition")+
+    '</div>'+
+    sigField(lbl("REPRESENTATIVE SIGNATURE","නියෝජිත අත්සන"),"confirm.repSig")+
+
+    '<div class="section-h">'+lbl("DOPING CONTROL OFFICER","උත්තේජක පාලන නිලධාරියා")+'</div>'+
+    fld(lbl("NAME","නම"),"confirm.dcoName")+
+    '<div class="grid-2">'+
+      fld(lbl("DATE","දිනය"),"confirm.date",{type:"date"})+
+      fld(lbl("TIME OF COMPLETION","සම්පූර්ණ කළ වේලාව"),"confirm.completed",{type:"time"})+
+    '</div>'+
+    sigField(lbl("DCO SIGNATURE","නිලධාරි අත්සන"),"confirm.dcoSig")+
+
+    '<div class="info-card mt-8"><h4>Athlete declaration</h4>'+
+      '<p style="font-size:13.5px">I declare that the information I have given on this document is correct. I declare that, subject to comments made in Section 4, sample collection was conducted in accordance with the relevant procedures for sample collection. I accept that all information related to doping control, including but not limited to laboratory results and possible sanctions, shall be shared with relevant bodies in accordance with the World Anti-Doping Code. I have read and understood the text overleaf and I consent to the processing of my personal data through ADAMS.</p>'+
+    '</div>'+
+    sigField(lbl("ATHLETE'S SIGNATURE","ක්‍රීඩකයාගේ අත්සන"),"confirm.athleteSig");
 }
 
+/* ---------- step 8 · review ---------- */
+function wizStep8(){
+  var d = Wiz.data;
+  function sec(title, rows){
+    return '<div class="review-sec"><h5>'+esc(title)+'</h5><dl class="kv">'+
+      rows.filter(Boolean).map(function(r){
+        return '<dt>'+esc(r[0])+'</dt><dd>'+(r[1] ? esc(r[1]) : '<span class="muted">Not recorded</span>')+'</dd>';
+      }).join("")+'</dl></div>';
+  }
+  function sig(label, path){
+    var v = wizGet(path);
+    return '<div style="flex:1 1 150px;min-width:140px">'+
+      '<div class="label">'+esc(label)+'</div>'+
+      (v ? '<img src="'+v+'" alt="'+esc(label)+'" style="width:100%;height:64px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg)" />'
+         : '<div style="padding:18px;border:1px dashed var(--line);border-radius:10px;text-align:center;font-size:12px" class="muted">Not signed</div>')+
+    '</div>';
+  }
+
+  var sampleRows = d.samples.map(function(s,i){
+    return '<div class="review-sec"><h5>Sample '+(i+1)+' — '+(s.type==="U"?"Urine":"Blood")+'</h5><dl class="kv">'+
+      '<dt>Sample code number</dt><dd>'+(s.code?esc(s.code):'<span class="muted">Not recorded</span>')+'</dd>'+
+      '<dt>Volume (ml)</dt><dd>'+(s.vol?esc(s.vol):'<span class="muted">Not recorded</span>')+'</dd>'+
+      '<dt>Time sealed</dt><dd>'+(s.sealed?esc(s.sealed):'<span class="muted">Not recorded</span>')+'</dd>'+
+      '<dt>Specific gravity</dt><dd>'+(s.sg?esc(s.sg):'<span class="muted">Not recorded</span>')+'</dd>'+
+      '<dt>Witness / BCO</dt><dd>'+(s.witness?esc(s.witness):'<span class="muted">Not recorded</span>')+'</dd>'+
+    '</dl></div>';
+  }).join("");
+
+  var usedPartials = d.partial.filter(function(p){ return p.no || p.vol || p.sealed; });
+
+  return '<div class="row-b wrap mb-16"><div>'+
+      '<h4 style="font-size:16px;font-weight:750">Review the completed form</h4>'+
+      '<p class="muted" style="font-size:14px;margin-top:4px">Check every field before submitting. Once submitted the form is locked.</p></div>'+
+      '<span class="badge blue">'+esc(d.auth.formNo ? "Form " + d.auth.formNo : "Doping Control Form")+'</span></div>'+
+
+    sec("Authorities", [
+      ["Testing authority", d.auth.testing],
+      ["Sample collection authority", d.auth.collection],
+      ["Results management authority", d.auth.results],
+      ["Test mission code", d.auth.mission],
+      ["Event / competition", d.auth.event]
+    ])+
+    sec("1 · Athlete notification", [
+      ["Family name", d.notify.family],
+      ["Given name", d.notify.given],
+      ["Date of birth", d.notify.dob ? fmtDate(d.notify.dob) : ""],
+      ["Nationality", d.notify.nationality],
+      ["Document", [d.notify.docType, d.notify.docNo].filter(Boolean).join(" · ")],
+      ["Sample required", [d.notify.reqUrine?"Urine":"", d.notify.reqBlood?"Blood":""].filter(Boolean).join(" + ")],
+      ["Notified", [d.notify.date ? fmtDate(d.notify.date) : "", d.notify.time].filter(Boolean).join(" at ")],
+      ["DCO / chaperone", d.notify.dcoName]
+    ])+
+    sec("2 · Athlete information", [
+      ["Arrival at station", d.info.arrival],
+      ["Address", [d.info.street, d.info.city, d.info.province, d.info.country].filter(Boolean).join(", ")],
+      ["Telephone", d.info.tel],
+      ["E-mail", d.info.email],
+      ["Doctor", d.info.doctor],
+      ["Coach", d.info.coach]
+    ])+
+    sec("3 · Information for analysis", [
+      ["Test type", d.analysis.testType],
+      ["Sample collection date", d.analysis.collectionDate ? fmtDate(d.analysis.collectionDate) : ""],
+      ["Gender", d.analysis.gender],
+      ["Sport", d.analysis.sport],
+      ["Discipline", d.analysis.discipline]
+    ])+
+    (usedPartials.length
+      ? usedPartials.map(function(p,i){
+          return sec("Partial sample "+(i+1), [
+            ["Partial sample number", p.no], ["Volume (ml)", p.vol],
+            ["Time sealed", p.sealed], ["Athlete / DCO initials", p.initials]
+          ]);
+        }).join("")
+      : "")+
+    sampleRows+
+    sec("3 · Declaration", [
+      ["Medications / supplements / transfusions", d.decl.meds],
+      ["Supplementary report form", d.decl.suppNo],
+      ["Consent for research", d.decl.research === "accept" ? "Accepted" : (d.decl.research === "refuse" ? "Refused" : "")]
+    ])+
+    sec("4 · Confirmation", [
+      ["Comments", d.confirm.comments],
+      ["Supplementary report form", d.confirm.suppNo],
+      ["Athlete representative", [d.confirm.repName, d.confirm.repPosition].filter(Boolean).join(" · ")],
+      ["Doping control officer", d.confirm.dcoName],
+      ["Date", d.confirm.date ? fmtDate(d.confirm.date) : ""],
+      ["Time of completion", d.confirm.completed]
+    ])+
+    '<div class="review-sec"><h5>Signatures</h5>'+
+      '<div class="row wrap" style="gap:14px;align-items:stretch">'+
+        sig("Athlete (notification)","notify.athleteSig")+
+        sig("DCO / chaperone","notify.dcoSig")+
+        sig("Representative","confirm.repSig")+
+        sig("DCO (confirmation)","confirm.dcoSig")+
+        sig("Athlete (declaration)","confirm.athleteSig")+
+      '</div></div>'+
+
+    '<div class="info-card mt-16"><h4>'+ICON.info+' Copy distribution</h4>'+
+      '<p style="font-size:13.5px">Original — ADO (white) · Copy 1 — Athlete (pink) · Copy 2 — Laboratory (yellow) · '+
+      'Copy 3 — Laboratory (blue) · Copy 4 — Athlete notification (green)</p>'+
+      '<p style="font-size:12.5px;margin-top:8px" class="muted">In a digital submission these become the athlete\'s PDF copy, the laboratory record and the agency record.</p>'+
+    '</div>';
+}
+
+/* ---------- validation ---------- */
+var REQUIRED = [
+  {step:1, path:"auth.testing",             label:"testing authority"},
+  {step:1, path:"auth.collection",          label:"sample collection authority"},
+  {step:1, path:"auth.mission",             label:"test mission code"},
+  {step:2, path:"notify.family",            label:"athlete family name"},
+  {step:2, path:"notify.given",             label:"athlete given name"},
+  {step:2, path:"notify.dob",               label:"athlete date of birth"},
+  {step:2, path:"notify.nationality",       label:"nationality"},
+  {step:2, path:"notify.docType",           label:"document type"},
+  {step:2, path:"notify.docNo",             label:"document number"},
+  {step:2, path:"notify.date",              label:"notification date"},
+  {step:2, path:"notify.time",              label:"notification time"},
+  {step:2, path:"notify.dcoName",           label:"DCO / chaperone name"},
+  {step:3, path:"info.arrival",             label:"arrival time at the doping control station"},
+  {step:4, path:"analysis.collectionDate",  label:"sample collection date"},
+  {step:4, path:"analysis.gender",          label:"gender"},
+  {step:4, path:"analysis.sport",           label:"sport"},
+  {step:6, path:"decl.meds",                label:"medication declaration (enter “None” if nothing was taken)"},
+  {step:7, path:"confirm.dcoName",          label:"doping control officer name"},
+  {step:7, path:"confirm.date",             label:"date of completion"},
+  {step:7, path:"confirm.completed",        label:"time of completion"}
+];
+
+function wizValidate(step){
+  var d = Wiz.data;
+  for(var i=0;i<REQUIRED.length;i++){
+    if(REQUIRED[i].step !== step) continue;
+    if(!String(wizGet(REQUIRED[i].path) || "").trim()){
+      UI.toast("Missing: " + REQUIRED[i].label); return false;
+    }
+  }
+  if(step === 2){
+    if(!d.notify.reqUrine && !d.notify.reqBlood){ UI.toast("Select the type of sample required"); return false; }
+    if(!d.notify.athleteSig){ UI.toast("The athlete must sign the notification"); return false; }
+    if(!d.notify.dcoSig){ UI.toast("The DCO or chaperone must sign the notification"); return false; }
+  }
+  if(step === 5){
+    for(var s=0;s<d.samples.length;s++){
+      var sm = d.samples[s];
+      if(!String(sm.code||"").trim()){ UI.toast("Sample "+(s+1)+": enter the sample code number"); return false; }
+      if(!String(sm.vol||"").trim()){ UI.toast("Sample "+(s+1)+": enter the volume"); return false; }
+      if(!String(sm.sealed||"").trim()){ UI.toast("Sample "+(s+1)+": enter the time sealed"); return false; }
+      if(sm.type === "U" && !String(sm.sg||"").trim()){ UI.toast("Sample "+(s+1)+": enter the specific gravity"); return false; }
+    }
+  }
+  if(step === 6 && !d.decl.research){ UI.toast("Record the athlete's research consent"); return false; }
+  if(step === 7){
+    if(!d.confirm.dcoSig){ UI.toast("The doping control officer must sign"); return false; }
+    if(!d.confirm.athleteSig){ UI.toast("The athlete must sign the declaration"); return false; }
+  }
+  return true;
+}
+
+/* ---------- shell ---------- */
+Officer.newTest = function(){
+  if(!Wiz) Wiz = newWiz();
+  var step = Wiz.step;
+  var pct = Math.round((step-1)/(WIZ_STEPS.length-1)*100);
+
+  var stepper = WIZ_STEPS.map(function(s){
+    var cls = s.n === step ? "step on" : (s.n < step ? "step done" : "step");
+    return '<button class="'+cls+'" '+act("wizGo", s.n)+'>'+
+      '<span class="st-n">'+(s.n < step ? "✓" : s.n)+'</span>'+esc(s.t)+'</button>';
+  }).join("");
+
+  var body = [wizStep1,wizStep2,wizStep3,wizStep4,wizStep5,wizStep6,wizStep7,wizStep8][step-1]();
+
+  return '<div class="row-b wrap mb-8">'+
+      '<div><h1 style="font-size:clamp(20px,3vw,27px);font-weight:820">Doping Control Form</h1>'+
+      '<p class="muted mt-8" style="font-size:14px">Step '+step+' of '+WIZ_STEPS.length+' · '+esc(WIZ_STEPS[step-1].t)+'</p></div>'+
+      '<button class="btn ghost sm" '+act("wizCancel")+'>'+ICON.x+' Cancel</button>'+
+    '</div>'+
+    '<div class="stepper">'+stepper+'</div>'+
+    '<div class="wizard-bar"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="card pad" id="wizBody">'+body+'</div>'+
+    '<div class="wiz-foot">'+
+      (step > 1 ? '<button class="btn ghost" '+act("wizPrev")+'>'+ICON.back+' Back</button>' : '<span></span>')+
+      (step < WIZ_STEPS.length
+        ? '<button class="btn" '+act("wizNext")+'>Continue '+ICON.arrow+'</button>'
+        : '<div class="row" style="gap:10px"><button class="btn ghost" onclick="window.print()">'+ICON.dl+' Download PDF</button>'+
+          '<button class="btn green" '+act("wizSubmit")+'>'+ICON.shield+' Submit to SLADA</button></div>')+
+    '</div>';
+};
+
+registerAction("wizNext", function(){
+  if(!wizValidate(Wiz.step)) return;
+  if(Wiz.step < WIZ_STEPS.length){ Wiz.step++; Router.render(); }
+});
+registerAction("wizPrev", function(){ if(Wiz.step > 1){ Wiz.step--; Router.render(); } });
+registerAction("wizGo", function(n){
+  n = +n;
+  if(n > Wiz.step){
+    for(var s=Wiz.step; s<n; s++){ if(!wizValidate(s)){ Wiz.step = s; Router.render(); return; } }
+  }
+  Wiz.step = n; Router.render();
+});
+registerAction("wizCancel", function(){
+  UI.modal('<h3>Discard this form?</h3>'+
+    '<p>Everything entered in this doping control form will be lost. This cannot be undone.</p>'+
+    '<div class="row" style="gap:10px;justify-content:flex-end">'+
+      '<button class="btn ghost" onclick="UI.closeModal()">Keep editing</button>'+
+      '<button class="btn danger" '+act("wizDiscard")+'>Discard</button></div>');
+});
+registerAction("wizDiscard", function(){ Wiz = null; UI.closeModal(); go("officer"); });
+
+registerAction("wizSubmit", function(){
+  for(var s=1;s<=7;s++){
+    if(!wizValidate(s)){ Wiz.step = s; Router.render(); return; }
+  }
+  var d = Wiz.data;
+  var name = (d.notify.given + " " + d.notify.family).trim();
+  var ref = "DCF-" + new Date().getFullYear() + "-" + String(500 + (Store.s.submittedTests||[]).length).padStart(4,"0");
+
+  // an athlete entered by hand is added to the register, as step 2 promises
+  if(!d.athleteId){
+    d.athleteId = "ATH-" + (4000 + ATHLETES.length);
+    ATHLETES.push({
+      id:d.athleteId, name:name, sport:d.analysis.sport,
+      fed:SPORT_FED[d.analysis.sport] || "—",
+      dob:d.notify.dob, gender:d.analysis.gender || "—",
+      nat:d.notify.nationality || "—", nic:d.notify.docNo || "—",
+      status:"Active", tests:0, last:d.analysis.collectionDate
+    });
+  }
+  var athRec = null;
+  for(var i=0;i<ATHLETES.length;i++){ if(ATHLETES[i].id === d.athleteId){ athRec = ATHLETES[i]; break; } }
+  if(athRec){ athRec.tests = (athRec.tests||0) + 1; athRec.last = d.analysis.collectionDate; }
+
+  var types = {};
+  d.samples.forEach(function(s){ types[s.type === "B" ? "Blood" : "Urine"] = 1; });
+  var sampleLabel = Object.keys(types).join(" + ") || "Urine";
+
+  Store.s.submittedTests = [{
+    id:ref, athlete:name, athleteId:d.athleteId, sport:d.analysis.sport,
+    comp:d.auth.event || d.auth.mission || "Test mission",
+    venue:[d.info.city, d.info.country].filter(Boolean).join(", ") || "—",
+    date:d.analysis.collectionDate, type:d.analysis.testType,
+    sample:sampleLabel, status:"Submitted", officer:d.confirm.dcoName,
+    mission:d.auth.mission, formNo:d.auth.formNo,
+    codes:d.samples.map(function(s){ return s.code; }).filter(Boolean).join(", ")
+  }].concat(Store.s.submittedTests || []);
+  Store.save();
+  Wiz = null;
+
+  UI.modal(
+    '<div class="center"><div class="cert-seal" style="width:70px;height:70px;font-size:30px">✓</div>'+
+    '<h3>Submitted to SLADA</h3>'+
+    '<p>Doping control form <b>'+esc(ref)+'</b> has been submitted and is awaiting review. '+
+    'The athlete should now be given their copy.</p>'+
+    '<div class="row" style="gap:10px;justify-content:center">'+
+      '<button class="btn ghost" onclick="UI.closeModal();window.print()">'+ICON.dl+' Download PDF</button>'+
+      '<button class="btn" onclick="UI.closeModal();go(\'officer\')">Done</button>'+
+    '</div></div>'
+  );
+});
+
+/* ---------- signature pads (path-addressed) ---------- */
 function initSigPads(){
   $$(".sigpad").forEach(function(pad){
-    var key = pad.dataset.sig;
+    if(pad.dataset.bound) return;
+    pad.dataset.bound = "1";
+    var path = pad.getAttribute("data-sig");
     var canvas = pad.querySelector("canvas");
     var dpr = window.devicePixelRatio || 1;
     var rect = pad.getBoundingClientRect();
@@ -647,11 +997,11 @@ function initSigPads(){
     ctx.lineWidth = 2.2; ctx.lineCap = "round"; ctx.lineJoin = "round";
     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#0B1B34";
 
-    // restore an existing signature
-    if(Wiz.data.sig[key]){
+    var existing = wizGet(path);
+    if(existing){
       var img = new Image();
       img.onload = function(){ ctx.drawImage(img, 0, 0, rect.width, 150); };
-      img.src = Wiz.data.sig[key];
+      img.src = existing;
     }
 
     var drawing = false, last = null;
@@ -660,7 +1010,8 @@ function initSigPads(){
       return {x:e.clientX - r.left, y:e.clientY - r.top};
     }
     canvas.addEventListener("pointerdown", function(e){
-      drawing = true; last = pos(e); canvas.setPointerCapture(e.pointerId);
+      drawing = true; last = pos(e);
+      try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
       pad.classList.add("signed");
       e.preventDefault();
     });
@@ -668,13 +1019,12 @@ function initSigPads(){
       if(!drawing) return;
       var p = pos(e);
       ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-      last = p;
-      e.preventDefault();
+      last = p; e.preventDefault();
     });
     function end(){
       if(!drawing) return;
       drawing = false;
-      Wiz.data.sig[key] = canvas.toDataURL("image/png");
+      wizSet(path, canvas.toDataURL("image/png"));
       var badge = pad.parentNode.querySelector(".badge");
       if(badge){ badge.className = "badge green"; badge.textContent = "Signed"; }
     }
@@ -683,178 +1033,8 @@ function initSigPads(){
     canvas.addEventListener("pointercancel", end);
   });
 }
-function clearSig(key){
-  Wiz.data.sig[key] = null;
-  Router.render();
-}
-
-/* --- step 7: review --- */
-function wizStep7(){
-  var d = Wiz.data;
-  function sec(title, rows){
-    return '<div class="review-sec"><h5>'+esc(title)+'</h5><dl class="kv">'+
-      rows.map(function(r){ return '<dt>'+esc(r[0])+'</dt><dd>'+(r[1] ? esc(r[1]) : '<span class="muted">Not recorded</span>')+'</dd>'; }).join("")+
-    '</dl></div>';
-  }
-  var sigs = ["athlete","officer","witness"].map(function(k){
-    var label = k === "athlete" ? "Athlete" : (k === "officer" ? "Officer" : "Witness");
-    return '<div style="flex:1;min-width:150px">'+
-      '<div class="label">'+label.toUpperCase()+'</div>'+
-      (d.sig[k]
-        ? '<img src="'+d.sig[k]+'" alt="'+label+' signature" style="width:100%;height:70px;object-fit:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg)" />'
-        : '<div class="empty" style="padding:20px;border:1px dashed var(--line);border-radius:10px"><p style="font-size:12px">Not signed</p></div>')+
-    '</div>';
-  }).join("");
-
-  var ref = "DCF-" + new Date().getFullYear() + "-" + String(500 + (Store.s.submittedTests||[]).length).padStart(4,"0");
-
-  return '<div class="row-b wrap mb-16"><div>'+
-      '<h4 style="font-size:16px;font-weight:750">Review and submit</h4>'+
-      '<p class="muted" style="font-size:14px;margin-top:4px">Check every field before submitting. Once submitted the form is locked.</p></div>'+
-      '<span class="badge blue">'+esc(ref)+'</span></div>'+
-    sec("Competition information", [
-      ["Competition", d.comp.name], ["Venue", d.comp.venue],
-      ["Date", d.comp.date ? fmtDate(d.comp.date) : ""], ["Test type", d.comp.type], ["Officer", d.comp.officer]
-    ])+
-    sec("Athlete information", [
-      ["Name", d.ath.name], ["Athlete ID", d.ath.id], ["Sport", d.ath.sport], ["Federation", d.ath.fed],
-      ["Date of birth", d.ath.dob ? fmtDate(d.ath.dob) : ""], ["Gender", d.ath.gender],
-      ["Nationality", d.ath.nat], ["Passport / National ID", d.ath.nic]
-    ])+
-    sec("Notification", [
-      ["Time notified", d.notify.time], ["Location", d.notify.location],
-      ["Officer", d.notify.officer], ["Witness", d.notify.witness]
-    ])+
-    sec("Sample collection", [
-      ["Bottle A", d.sample.codeA], ["Bottle B", d.sample.codeB],
-      ["Collection time", d.sample.time], ["Sample type", d.sample.type]
-    ])+
-    sec("Athlete declaration", [
-      ["Medications", d.decl.meds], ["Supplements", d.decl.supps],
-      ["Medical conditions / TUE", d.decl.conditions], ["Comments", d.decl.comments]
-    ])+
-    '<div class="review-sec"><h5>Digital signatures</h5>'+
-      '<div class="row wrap" style="gap:14px;align-items:stretch">'+sigs+'</div></div>'+
-    '<div class="info-card mt-16"><h4>'+ICON.info+' Before you submit</h4>'+
-      '<p>Confirm the bottle codes on the form match the codes on the sealed kit, and that the athlete has read and signed the declaration. '+
-      'A copy of the completed form must be given to the athlete.</p></div>';
-}
-
-/* --- wizard navigation --- */
-function wizValidate(step){
-  var d = Wiz.data;
-  if(step === 1){
-    if(!d.comp.name.trim()){ UI.toast("Enter the competition name"); return false; }
-    if(!d.comp.venue.trim()){ UI.toast("Enter the venue"); return false; }
-  }
-  if(step === 2){
-    if(!d.ath.name.trim()){ UI.toast("Enter the athlete's name"); return false; }
-    if(!d.ath.sport){ UI.toast("Select the athlete's sport"); return false; }
-  }
-  if(step === 4){
-    if(!d.sample.codeA.trim() || !d.sample.codeB.trim()){
-      UI.toast("Record both bottle codes — use Scan to simulate"); return false;
-    }
-  }
-  return true;
-}
-function wizNext(){
-  if(!wizValidate(Wiz.step)) return;
-  if(Wiz.step < 7){ Wiz.step++; Router.render(); }
-}
-function wizPrev(){ if(Wiz.step > 1){ Wiz.step--; Router.render(); } }
-function wizGo(n){
-  if(n > Wiz.step){ for(var s=Wiz.step; s<n; s++){ if(!wizValidate(s)){ Wiz.step = s; Router.render(); return; } } }
-  Wiz.step = n; Router.render();
-}
-function wizCancel(){
-  UI.modal('<h3>Discard this test?</h3>'+
-    '<p>All information entered in this workflow will be lost. This cannot be undone.</p>'+
-    '<div class="row" style="gap:10px;justify-content:flex-end">'+
-      '<button class="btn ghost" onclick="UI.closeModal()">Keep editing</button>'+
-      '<button class="btn danger" onclick="wizDiscard()">Discard</button></div>');
-}
-function wizDiscard(){ Wiz = null; UI.closeModal(); go("officer"); }
-
-/* Advancing a step only validates that step, so a form can reach review
-   with later sections blank. Re-check every mandatory field at submission
-   and send the officer back to the first one that is missing. */
-var REQUIRED = [
-  {step:1, path:"comp.name",       label:"competition name"},
-  {step:1, path:"comp.venue",      label:"venue"},
-  {step:1, path:"comp.date",       label:"date"},
-  {step:1, path:"comp.officer",    label:"doping control officer"},
-  {step:2, path:"ath.name",        label:"athlete name"},
-  {step:2, path:"ath.sport",       label:"athlete sport"},
-  {step:2, path:"ath.dob",         label:"athlete date of birth"},
-  {step:2, path:"ath.gender",      label:"athlete gender"},
-  {step:3, path:"notify.time",     label:"time notified"},
-  {step:3, path:"notify.location", label:"notification location"},
-  {step:3, path:"notify.officer",  label:"notifying officer"},
-  {step:4, path:"sample.codeA",    label:"bottle A code"},
-  {step:4, path:"sample.codeB",    label:"bottle B code"},
-  {step:4, path:"sample.time",     label:"collection time"},
-  {step:5, path:"decl.meds",       label:"medications declaration (enter “None” if nothing was taken)"},
-  {step:5, path:"decl.supps",      label:"supplements declaration (enter “None” if nothing was taken)"}
-];
-
-function wizSubmit(){
-  var d = Wiz.data;
-
-  for(var i=0;i<REQUIRED.length;i++){
-    var r = REQUIRED[i];
-    if(!String(wizGet(r.path) || "").trim()){
-      UI.toast("Missing: " + r.label);
-      Wiz.step = r.step;
-      Router.render();
-      return;
-    }
-  }
-  if(!d.sig.athlete || !d.sig.officer){
-    UI.toast("Athlete and officer signatures are required");
-    Wiz.step = 6; Router.render(); return;
-  }
-  var ref = "DCF-" + new Date().getFullYear() + "-" + String(500 + (Store.s.submittedTests||[]).length).padStart(4,"0");
-
-  // Step 2 tells the officer an unregistered athlete "will be created on
-  // submission". Honour that: mint an ID and add them to the register, so
-  // the test is not orphaned against a dash.
-  if(!d.ath.id){
-    d.ath.id = "ATH-" + (4000 + ATHLETES.length);
-    ATHLETES.push({
-      id:d.ath.id, name:d.ath.name, sport:d.ath.sport,
-      fed:d.ath.fed || SPORT_FED[d.ath.sport] || "—",
-      dob:d.ath.dob || "", gender:d.ath.gender || "—",
-      nat:d.ath.nat || "—", nic:d.ath.nic || "—",
-      status:"Active", tests:0, last:d.comp.date
-    });
-  }
-  var athRec = null;
-  for(var i=0;i<ATHLETES.length;i++){ if(ATHLETES[i].id === d.ath.id){ athRec = ATHLETES[i]; break; } }
-  if(athRec){ athRec.tests = (athRec.tests || 0) + 1; athRec.last = d.comp.date; }
-
-  var rec = {
-    id:ref, athlete:d.ath.name, athleteId:d.ath.id, sport:d.ath.sport,
-    comp:d.comp.name, venue:d.comp.venue, date:d.comp.date, type:d.comp.type,
-    sample:d.sample.type, status:"Submitted", officer:d.comp.officer
-  };
-  Store.s.submittedTests = [rec].concat(Store.s.submittedTests || []);
-  Store.save();
-  Wiz = null;
-  UI.modal(
-    '<div class="center"><div class="cert-seal" style="width:72px;height:72px;font-size:32px">✓</div>'+
-    '<h3>Submitted to SLADA</h3>'+
-    '<p>Doping control form <b>'+esc(ref)+'</b> has been submitted and is awaiting review. '+
-    'A copy should now be provided to the athlete.</p>'+
-    '<div class="row" style="gap:10px;justify-content:center">'+
-      '<button class="btn ghost" onclick="UI.closeModal();window.print()">'+ICON.dl+' Download PDF</button>'+
-      '<button class="btn" onclick="UI.closeModal();go(\'officer\')">Done</button>'+
-    '</div></div>'
-  );
-}
 
 Officer.afterNewTest = function(){
   if(!Wiz) return;
-  if(Wiz.step === 4) drawBarcode();
-  if(Wiz.step === 6) initSigPads();
+  initSigPads();
 };
