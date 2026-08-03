@@ -106,7 +106,67 @@ var RULES = [
     why:"These treat reflux, nausea and digestive upset. None affects the systems that anti-doping rules are concerned with, so they are permitted at all times.",
     reminder:"Always verify combination medications and consult official anti-doping resources before competition." },
 
-  { re:/\b(melatonin|dextromethorphan|guaifenesin|xylometazoline|oxymetazoline|oseltamivir|metformin|atorvastatin|simvastatin|levothyroxine|amlodipine|losartan|ramipril|sertraline|fluoxetine|vitamin|ascorbic|cholecalciferol|folic acid|ferrous)\b/i,
+  { re:/\b(phenylephrine|bromhexine|ambroxol|acetylcysteine|carbocisteine|guaifenesin|dextromethorphan|xylometazoline|oxymetazoline|menthol|camphor|pholcodine)\b/i,
+    status:"permitted", cat:"Cough, cold and decongestant",
+    why:"Unlike pseudoephedrine and ephedrine, these cough, cold and decongestant ingredients are not stimulants and carry no threshold. They are permitted in and out of competition.",
+    reminder:"Cold and flu products usually combine several ingredients. One permitted ingredient does not make the product permitted — check every active ingredient on the pack, because pseudoephedrine is frequently among them." },
+
+  { re:/\b(montelukast|zafirlukast|theophylline|ipratropium|tiotropium|cromoglicate|cromoglycate|ketotifen|bilastine|ebastine|azelastine|olopatadine|rupatadine)\b/i,
+    status:"permitted", cat:"Asthma and allergy (non beta-2)",
+    why:"These control asthma and allergy without acting on the beta-2 receptor, so the dose limits that apply to inhalers such as salbutamol do not apply here. They are permitted at all times.",
+    reminder:"If your asthma treatment also includes a reliever inhaler, that part is dose limited — check it separately." },
+
+  { re:/\b(fluticasone|beclometasone|beclomethasone|mometasone|ciclesonide)\b/i,
+    status:"permitted", cat:"Inhaled or topical corticosteroid",
+    why:"Glucocorticoids are prohibited in competition by mouth, injection or rectally — but not when inhaled or applied to the skin, nose or eyes, because very little reaches the bloodstream. These are inhaled and topical steroids, so they are permitted.",
+    reminder:"The route is what matters. The same class of drug taken as tablets or by injection is prohibited in competition, so never switch route without checking." },
+
+  { re:/\b(cefixime|cefpodoxime|ceftriaxone|cefaclor|levofloxacin|ofloxacin|norfloxacin|cloxacillin|ampicillin|gentamicin|rifampicin|isoniazid|ethambutol|pyrazinamide|fluconazole|itraconazole|ketoconazole|terbinafine|clotrimazole|griseofulvin|acyclovir|aciclovir|valacyclovir|albendazole|mebendazole|ivermectin|chloroquine|hydroxychloroquine|artemether|lumefantrine|primaquine)\b/i,
+    status:"permitted", cat:"Anti-infective",
+    why:"Antibiotics, antifungals, antivirals and antiparasitics treat infection and confer no competitive advantage, so none of them is restricted.",
+    reminder:"Tell your medical team you are a tested athlete, and check anything supplied alongside the course in the same pack." },
+
+  { re:/\b(zinc|calcium|magnesium|cyanocobalamin|thiamine|riboflavin|niacin|biotin|creatine|omega|fish oil|glucosamine|collagen|whey|casein|electrolyte|oral rehydration|probiotic|lactobacillus)\b/i,
+    status:"permitted", cat:"Vitamin, mineral or nutritional supplement",
+    why:"These are nutrients rather than prohibited substances, and are permitted at all times. The risk with supplements is never the named ingredient — it is what else ends up in the tub.",
+    reminder:"Supplements are regulated as food, not medicine, and contamination with prohibited substances is well documented. Prefer batch-tested products, and keep the container, batch number and receipt." },
+
+  { re:/\b(serratiopeptidase|trypsin|chymotrypsin|bromelain|tizanidine|baclofen|chlorzoxazone|thiocolchicoside|aceclofenac|etoricoxib|nimesulide|ketorolac|flurbiprofen)\b/i,
+    status:"permitted", cat:"Anti-inflammatory, enzyme or muscle relaxant",
+    why:"These reduce inflammation, swelling or muscle spasm. None builds tissue, carries oxygen or masks another substance, so none is restricted.",
+    reminder:"Permitted does not mean risk-free. Prolonged anti-inflammatory use during heavy training can affect kidney function, especially in heat." },
+
+  { re:/\b(telmisartan|valsartan|olmesartan|irbesartan|enalapril|lisinopril|nifedipine|diltiazem|verapamil|rosuvastatin|clopidogrel|warfarin|digoxin|glimepiride|gliclazide|sitagliptin|empagliflozin|dapagliflozin|carbimazole|methimazole|allopurinol|febuxostat|silymarin|ursodeoxycholic|sucralfate|rabeprazole|mebeverine|dicyclomine|bisacodyl|lactulose)\b/i,
+    status:"permitted", cat:"Long-term or chronic condition medicine",
+    why:"Medicines for blood pressure, cholesterol, diabetes, thyroid and similar long-term conditions are not on the Prohibited List and are permitted at all times.",
+    reminder:"Two exceptions catch athletes out: some blood pressure combinations contain a diuretic, which is prohibited, and beta-blockers are restricted in certain sports. Check the full ingredient list." },
+
+  { re:/\b(escitalopram|citalopram|paroxetine|venlafaxine|duloxetine|amitriptyline|olanzapine|risperidone|quetiapine|diazepam|lorazepam|clonazepam|alprazolam|zolpidem|gabapentin|pregabalin|carbamazepine|valproate|levetiracetam|phenytoin|lamotrigine|sumatriptan|flunarizine)\b/i,
+    status:"permitted", cat:"Neurological or psychiatric medicine",
+    why:"Antidepressants, anti-anxiety medicines, sleep aids, anticonvulsants and migraine treatments are not prohibited in sport and are permitted at all times.",
+    reminder:"Stimulants prescribed for ADHD are the exception — those are prohibited in competition and normally need a Therapeutic Use Exemption. Check the specific medicine." },
+
+  { re:/\b(aluminium hydroxide|aluminum hydroxide|magnesium carbonate|magnesium hydroxide|magnesium trisilicate|calcium carbonate|sodium alginate|alginic acid|sodium bicarbonate|dimethicone|simeticone|antacid|sucralfate)\b/i,
+    status:"permitted", cat:"Antacid",
+    why:"Antacids neutralise stomach acid and are barely absorbed into the bloodstream. They have no effect on performance and are permitted at all times.",
+    reminder:"Antacids can reduce how well other medicines are absorbed, including some antibiotics. Space them apart and tell your doctor what else you are taking." },
+
+  { re:/\b(senna|ispaghula|psyllium|macrogol|polyethylene glycol|sorbitol|glycerin|glycerol|liquid paraffin|loperamide|racecadotril|dimenhydrinate|meclizine|meclozine|cinnarizine|prochlorperazine|metoclopramide|tinidazole|praziquantel)\b/i,
+    status:"permitted", cat:"Digestive, anti-nausea or antiparasitic",
+    why:"Laxatives, anti-diarrhoeals, travel-sickness and anti-nausea medicines are not on the Prohibited List and are permitted at all times.",
+    reminder:"Rapid fluid loss from laxatives is not a safe way to make weight, and some weight-loss products marketed alongside them do contain prohibited stimulants." },
+
+  { re:/\b(lidocaine|lignocaine|benzocaine|methyl salicylate|capsaicin|povidone|iodine|chlorhexidine|hydrogen peroxide|calamine|zinc oxide|petrolatum|paraffin|emollient|hypromellose|carboxymethylcellulose|sodium chloride|saline|chloramphenicol|tobramycin|olive oil)\b/i,
+    status:"permitted", cat:"Topical, eye, ear or antiseptic preparation",
+    why:"Creams, ointments, drops and antiseptics act where they are applied and reach the bloodstream in negligible amounts, so they carry no anti-doping restriction.",
+    reminder:"Local anaesthetics are permitted, but if an injection is being given for an injury, tell your medical team you are a tested athlete so the whole treatment can be checked." },
+
+  { re:/\b(pioglitazone|vildagliptin|linagliptin|tocopherol|retinol|multivitamin|pyridoxine|ergocalciferol|cyproheptadine|dexchlorpheniramine|ammonium chloride|sodium citrate|bromelain)\b/i,
+    status:"permitted", cat:"Generally permitted medicine",
+    why:"This ingredient is not on the Prohibited List and does not enhance performance, so it is permitted in and out of competition when taken as directed.",
+    reminder:"Always verify combination medications and consult official anti-doping resources before competition." },
+
+  { re:/\b(melatonin|oseltamivir|metformin|atorvastatin|simvastatin|levothyroxine|amlodipine|losartan|ramipril|sertraline|fluoxetine|vitamin|ascorbic|cholecalciferol|folic acid|ferrous)\b/i,
     status:"permitted", cat:"Generally permitted medicine",
     why:"This ingredient is not on the Prohibited List and does not enhance performance, so it is permitted in and out of competition when taken as directed.",
     reminder:"Always verify combination medications and consult official anti-doping resources before competition." }

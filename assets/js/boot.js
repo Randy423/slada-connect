@@ -66,7 +66,7 @@ function Landing(){
     '</header>'+
 
     '<div class="trust">'+
-      [["4","Connected portals"],["9","Clean sport guides"],["209","Ingredients classified"],["3","Languages"]].map(function(x){
+      [["4","Connected portals"],["9","Clean sport guides"],[String(INGREDIENTS.length),"Ingredients classified"],["3","Languages"]].map(function(x){
         return '<div class="t-i"><div class="t-n">'+esc(x[0])+'</div><div class="t-l">'+esc(x[1])+'</div></div>';
       }).join("")+
     '</div>'+
