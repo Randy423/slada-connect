@@ -19,6 +19,10 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 **Decide your ask before you go in.** See Section 8. A demo without an ask wastes the meeting.
 
+**Don't walk all eight steps of the form.** It's eight screens and you have three minutes. Go: notification (register lookup fills the fields) → jump to samples (specific gravity warning) → jump to review. Use the numbered step buttons along the top to skip. Walking every field is the fastest way to lose the room.
+
+**Pre-fill the form before you go in** if you can — get it to the samples step, then reset only if you want to show the register lookup live.
+
 ---
 
 ## 1. Opening — 45 seconds
@@ -93,29 +97,45 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 ---
 
-## 5. Demo: The officer workflow — 3 minutes
+## 5. Demo: The officer workflow — 3.5 minutes
 
-**[Open the officer portal, sign in, → Register New Test]**
+> **This is now your strongest credibility moment. Open with it.**
 
-**Say this before you demo it — do not wait to be asked:**
+**[Open the officer portal, sign in, → New Doping Control Form]**
 
-> "Before I show this, one important caveat. I built this form from the WADA International Standard, because I've never seen SLADA's actual doping control form. So the *flow* is what I want you to look at, not the field list. I already know things are missing — specific gravity and sample volume, the partial sample procedure, chain of custody, the athlete representative as a separate role from the witness. If this went further, the first thing I'd need is a copy of your real form so I can match it field for field."
+> "This is your Doping Control Form. Not a generic version of one — I worked from the actual SLADA form, and this follows it field for field.
+>
+> It's laid out in your four sections. Athlete notification. Athlete information. Information for analysis. Confirmation of procedure. The labels carry the Sinhala from your form, so an officer who uses the paper version recognises every screen."
 
-**[Walk through the steps quickly]**
+**[Step 2 — search the register, tap an athlete]**
 
-> "Seven steps. Competition details. Athlete — and this searches your register, so the officer isn't retyping details that already exist. Notification. Sample collection — the bottle codes here would come from a barcode scan; I've simulated that."
+> "Notification. The officer searches the register, and family name, given name, date of birth, nationality and document number fill themselves — instead of being copied by hand from an ID card. Then the athlete signs the acknowledgement, and the DCO signs. Both signatures, exactly as on the form."
 
-**[Step 6 — sign on the screen with your finger]**
+**[Skip ahead to Step 5 — Samples. This is the moment.]**
 
-> "Signatures on the screen. Athlete, officer, witness."
+> "This is the section I'd point you to. Partial sample number, volume, time sealed, athlete and DCO initials. Then each sealed sample — code number, volume, time sealed, and specific gravity."
 
-**[Step 7 — review]**
+**[Type a volume of 60 and a specific gravity of 1.002 — let the warnings appear]**
 
-> "Then the full form for review, a PDF for the athlete's copy, and submit."
+> "And here's the thing paper can't do. That's under 90 millilitres, so it tells the officer the sample isn't suitable for analysis. And the specific gravity is below 1.005, so it flags that too — before the athlete has left the station, rather than when the laboratory rejects it three weeks later."
 
-**[Go to the admin dashboard and show the test appearing]**
+**[Correct the values — the warnings disappear]**
 
-> "And the moment it's submitted it's in the system — testing numbers, the athlete's record, the reports. Which is the real argument for doing this digitally: today that's a paper form that has to be transported, filed and typed up by somebody."
+**[Step 6 briefly]**
+
+> "The medication declaration, with the seven-day wording from your form. And consent for research — accept or refuse."
+
+**[Step 8 — review]**
+
+> "Then the whole form for review, laid out in your four sections, with all five signature points and the copy distribution — original to the agency, pink to the athlete, yellow and blue to the laboratory, green for the notification."
+
+**[Submit, then go to the admin dashboard and show the test appearing]**
+
+> "And the moment it's submitted it's in the system — the testing numbers, the athlete's record, the reports. That's the real argument for doing this digitally. Today that's a carbon-copy form that has to be transported, filed and typed up by somebody."
+
+**Then be honest about what's still missing — say it before anyone asks:**
+
+> "Two things I haven't done. Your form references the athlete rights and responsibilities text on the overleaf of Copy 4, and I've only seen the front, so that text isn't in here. And each sample row on your form has a space for the witness or BCO to sign — I capture the witness's name but not their signature. Both are straightforward to add once I've seen the back of the form."
 
 ---
 
@@ -131,9 +151,9 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 > "So that you can judge it properly, let me separate what genuinely works from what's staged.
 >
-> **Real:** the medicine search and its live database lookups, the classification and safety logic, signature capture, form validation, the CSV export, and every screen you've seen. It works on any phone.
+> **Real:** the medicine search and its live database lookups, the classification and safety logic, the doping control form and its validation, the sample suitability checks, signature capture, the CSV export, and every screen you've seen. It works on any phone.
 >
-> **Not real:** there's no login security — any password works. There's no server; everything lives in the browser on the device. Barcode scanning is simulated. Report generation is a button that does nothing. And all the data is invented.
+> **Not real:** there's no login security — any password works. There's no server, so everything lives in the browser on that one device, which also means a form is lost if the app is closed mid-session. Report generation is a button that does nothing. And all the athlete data is invented.
 >
 > The gap between those two lists is roughly what the real work would be."
 
@@ -145,7 +165,7 @@ Pick **one**. Don't ask for everything.
 
 **If you want it to continue (recommended):**
 
-> "What I'd like to ask is this. Is this worth developing properly? And if you think it might be, two specific things would help: a copy of your doping control form so I can make that workflow real, and half an hour with one of your doping control officers and whoever runs athlete education. That would tell me quickly whether this fits how you actually work."
+> "What I'd like to ask is this. Is this worth developing properly? And if you think it might be, half an hour with one of your doping control officers would tell me quickly whether the form actually works the way they work — I've matched the fields, but I've never watched a session. The overleaf text of Copy 4 would let me finish the notification section."
 
 **If you want a decision:**
 
@@ -169,7 +189,16 @@ Pick **one**. Don't ask for everything.
 > "I genuinely don't know yet, and I'd rather not invent a number. It depends on things I can't decide alone: whether it needs a backend, whether it integrates with ADAMS, whether you'd license Global DRO data, and hosting and security requirements. If you're interested, that's a scoping conversation."
 
 **"Does it work with ADAMS?"**
-> "No. A real system would have to, and I haven't built that. It's one of the main open questions."
+> "No. A real system would have to, and I haven't built that. Your own form has the athlete consenting to their data being processed through ADAMS, so that integration isn't optional — it's one of the main open questions."
+
+**"Where did you get our doping control form?"**
+> Answer honestly — say who gave it to you. If it was shared with you for this purpose, say so plainly. Do not be vague about this; it's exactly the sort of thing that damages trust if it sounds evasive.
+
+**"Have you ever seen a doping control session?"**
+> "No. I've matched your form field by field, but I've never watched one being filled in, and I'd expect that to reveal things the form alone doesn't show — what order officers actually work in, what they do while waiting, what goes wrong. That's why I'm asking for time with a DCO rather than telling you it's finished."
+
+**"What happens if the officer's phone dies mid-session?"**
+> "Right now, the form is lost — it lives in the browser's memory. That's a genuine gap and it would have to be fixed before any real use: the form would need to save as it goes, so an officer can pick it up on another device." *(Be straight about this. It's the most obvious operational objection a DCO will raise.)*
 
 **"Does it work without internet?"**
 > "Partly. The education, the quiz and about 209 ingredient classifications work offline. Searching a brand name needs a connection, because that's a live database lookup."
