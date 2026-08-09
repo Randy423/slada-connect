@@ -4,14 +4,14 @@
 
 function Landing(){
   var roles = [
-    {ic:"🏃", t:"Athlete", d:"Create an account with your sport, then check medications against it, learn the rules and track your progress.",
+    {ic:"🏃", t:"Your athlete account", d:"Create an account with your sport, then check medications against it, track your progress and see your testing history.",
      to:"athlete", tint:"tint-blue", bg:"bg-blue", cta:"Sign in or create account"},
-    {ic:"👨‍⚕️", t:"Doping Control Officer", d:"Complete the SLADA Doping Control Form digitally — notification, samples, declarations and on-screen signatures.",
-     to:"officer", tint:"tint-green", bg:"bg-green", cta:"Officer sign in"},
-    {ic:"🛡", t:"Administrator", d:"National analytics, the athlete database, report generation and user management.",
-     to:"admin", tint:"tint-violet", bg:"bg-violet", cta:"Open dashboard"},
+    {ic:"🔍", t:"Can I Take This?", d:"Search any brand or active ingredient and get an answer that explains itself, checked against your own discipline.",
+     to:"athlete/check", tint:"tint-green", bg:"bg-green", cta:"Check a medicine"},
     {ic:"📚", t:"Learn Clean Sport", d:"Nine plain-language guides covering WADA, strict liability, TUEs and the testing process.",
-     to:"athlete/learn", tint:"tint-amber", bg:"bg-amber", cta:"Start learning"}
+     to:"athlete/learn", tint:"tint-amber", bg:"bg-amber", cta:"Start learning"},
+    {ic:"🧠", t:"Clean Sport Quiz", d:"Ten questions on the rules that matter most, with an explanation after every answer.",
+     to:"athlete/quiz", tint:"tint-violet", bg:"bg-violet", cta:"Take the quiz"}
   ].map(function(r){
     return '<button class="role-card '+r.tint+'" onclick="go(\''+r.to+'\')">'+
       '<span class="role-ic '+r.bg+'">'+r.ic+'</span>'+
@@ -24,8 +24,8 @@ function Landing(){
     {ic:"🔍", t:"Live medicine lookup", d:"Search any brand or active ingredient. Results resolve through RxNorm and openFDA, with an explanation of why each substance is treated the way it is.", bg:"bg-blue", tint:"tint-blue"},
     {ic:"🏅", t:"Answers for your sport", d:"Every result says whether it applies to your discipline. Beta-blockers are restricted in shooting and archery but not in athletics — the platform tells you which case you are in.", bg:"bg-violet", tint:"tint-violet"},
     {ic:"⚖️", t:"Safe by design", d:"Anything the platform cannot classify is flagged for verification rather than shown as permitted. A product with an unknown ingredient never reads as green.", bg:"bg-green", tint:"tint-green"},
-    {ic:"✍️", t:"Paperless doping control", d:"A digital version of SLADA's own Doping Control Form — all four sections, partial samples, specific gravity, research consent and five signature points.", bg:"bg-violet", tint:"tint-violet"},
-    {ic:"📊", t:"National oversight", d:"Testing volume, distribution by sport, and in- versus out-of-competition split, with export to PDF, CSV and Excel.", bg:"bg-amber", tint:"tint-amber"},
+    {ic:"📚", t:"The rules, in plain language", d:"Nine guides covering strict liability, the testing process, TUEs and supplements — written to be read once and understood, not filed away.", bg:"bg-violet", tint:"tint-violet"},
+    {ic:"🧪", t:"Your testing history", d:"Every doping control test recorded against you by SLADA, with its status, so you always know where your own record stands.", bg:"bg-amber", tint:"tint-amber"},
     {ic:"🌐", t:"Trilingual ready", d:"Interface language switches between English, Sinhala and Tamil, with the structure in place for full content translation.", bg:"bg-blue", tint:"tint-blue"},
     {ic:"📱", t:"Works on any device", d:"Mobile-first and fully responsive, from a phone at the trackside to a desktop at agency headquarters.", bg:"bg-green", tint:"tint-green"}
   ].map(function(f){
@@ -40,7 +40,7 @@ function Landing(){
         '<span class="brand-s" style="display:block">Clean Sport Platform</span></span></div>'+
       '<div class="nav-links">'+
         '<a class="nl-hide" href="#features" onclick="scrollToId(event,\'features\')">Features</a>'+
-        '<a class="nl-hide" href="#roles" onclick="scrollToId(event,\'roles\')">Portals</a>'+
+        '<a class="nl-hide" href="#roles" onclick="scrollToId(event,\'roles\')">What you get</a>'+
         '<a class="nl-hide" href="#/athlete/learn">Learn</a>'+
         '<button class="iconbtn" onclick="toggleTheme()" aria-label="Toggle theme">'+
           (Store.s.theme === "dark"
@@ -56,25 +56,25 @@ function Landing(){
         '<span class="eyebrow"><span class="dot"></span>Concept prototype · developed for the Sri Lanka Anti-Doping Agency</span>'+
         '<div class="kicker">SLADA Connect</div>'+
         '<h1>One Platform for <span class="grad">Clean Sport</span></h1>'+
-        '<p class="sub">A modern digital platform helping athletes, coaches and doping control officers promote clean sport in Sri Lanka.</p>'+
+        '<p class="sub">A modern digital platform helping athletes in Sri Lanka check their medications, learn the rules and compete clean.</p>'+
         '<div class="hero-cta">'+
           '<button class="btn lg" onclick="go(\'athlete\')">'+esc(t("getStarted"))+' '+ICON.arrow+'</button>'+
           '<button class="btn lg ghost" onclick="scrollToId(event,\'features\')">'+esc(t("learnMore"))+'</button>'+
         '</div>'+
-        '<p class="hero-note">Free to explore · Guest access available on every portal</p>'+
+        '<p class="hero-note">Free to explore · Guest access available without an account</p>'+
       '</div>'+
     '</header>'+
 
     '<div class="trust">'+
-      [["4","Connected portals"],["9","Clean sport guides"],[String(INGREDIENTS.length),"Ingredients classified"],["3","Languages"]].map(function(x){
+      [["9","Clean sport guides"],[String(INGREDIENTS.length),"Ingredients classified"],["2","Live drug databases"],["3","Languages"]].map(function(x){
         return '<div class="t-i"><div class="t-n">'+esc(x[0])+'</div><div class="t-l">'+esc(x[1])+'</div></div>';
       }).join("")+
     '</div>'+
 
     '<section class="sec soft" id="roles">'+
       '<div class="sec-in">'+
-        '<div class="sec-head"><h2>Built for everyone in clean sport</h2>'+
-          '<p>One system connecting athletes, doping control officers and the agency — each with the tools they actually need.</p></div>'+
+        '<div class="sec-head"><h2>Built around the athlete</h2>'+
+          '<p>Everything an athlete needs to stay on the right side of the rules, in one place — and nothing they do not.</p></div>'+
         '<div class="role-grid stagger">'+roles+'</div>'+
       '</div>'+
     '</section>'+
@@ -82,7 +82,7 @@ function Landing(){
     '<section class="sec" id="features">'+
       '<div class="sec-in">'+
         '<div class="sec-head"><h2>Designed to be trusted</h2>'+
-          '<p>Education, medication guidance and doping control management in a single platform — built to government standards and honest about its limits.</p></div>'+
+          '<p>Athlete education and medication guidance in a single platform — built to government standards and honest about its limits.</p></div>'+
         '<div class="feat-grid stagger">'+feats+'</div>'+
       '</div>'+
     '</section>'+
@@ -108,10 +108,11 @@ function Landing(){
             '<span class="sb-mark">'+ICON.logo+'</span>'+
             '<span style="color:#fff;font-weight:780;font-size:16px">SLADA Connect</span></div>'+
           '<p style="color:#93A7C4;font-size:13.5px;line-height:1.65;max-width:34ch;margin:0">'+
-            'A unified digital platform concept for athlete education, medication guidance and doping control management in Sri Lanka.</p>'+
+            'A digital platform concept for athlete education and medication guidance in Sri Lanka.</p>'+
         '</div>'+
-        '<div><h5>Portals</h5>'+
-          '<a href="#/athlete">Athlete</a><a href="#/officer">Officer</a><a href="#/admin">Administrator</a></div>'+
+        '<div><h5>Your account</h5>'+
+          '<a href="#/athlete">Dashboard</a><a href="#/athlete/check">Can I Take This?</a>'+
+          '<a href="#/athlete/profile">Profile</a><a href="#/athlete/settings">Settings</a></div>'+
         '<div><h5>Learn</h5>'+
           '<a href="#/athlete/learn">Clean sport guides</a><a href="#/athlete/quiz">Quiz</a>'+
           '<a href="#/athlete/prohibited">Prohibited List</a><a href="#/athlete/tue">TUE</a></div>'+
@@ -161,29 +162,12 @@ route("athlete/prohibited",    {role:"athlete", title:"Prohibited List",    sub:
 route("athlete/tue",           {role:"athlete", title:"Therapeutic Use Exemptions", sub:"Reference", view:Athlete.tue});
 route("athlete/resources",     {role:"athlete", title:"Official Resources", sub:"Contact SLADA",     view:Athlete.resources});
 route("athlete/profile",       {role:"athlete", title:"Profile",            sub:"Your progress",     view:Athlete.profile});
-route("athlete/notifications", {role:"athlete", title:"Notifications",      sub:"Alerts",            view:function(){ return notificationsView("athlete"); }, width:"narrow"});
-route("athlete/settings",      {role:"athlete", title:"Settings",           sub:"Preferences",       view:function(){ return settingsView("athlete"); }});
+route("athlete/notifications", {role:"athlete", title:"Notifications",      sub:"Alerts",            view:notificationsView, width:"narrow"});
+route("athlete/settings",      {role:"athlete", title:"Settings",           sub:"Preferences",       view:settingsView});
 
-/* --- officer --- */
-route("officer/login",         {role:"officer", bare:true, view:Officer.login});
-route("officer",               {role:"officer", title:"Dashboard",          sub:"Doping Control",    view:Officer.dashboard});
-route("officer/new-test",      {role:"officer", title:"Doping Control Form", sub:"New test",view:Officer.newTest, after:Officer.afterNewTest, width:"narrow"});
-route("officer/tests",         {role:"officer", title:"Test Records",       sub:"All forms",         view:Officer.tests});
-route("officer/athletes",      {role:"officer", title:"Athletes",           sub:"National register",  view:Officer.athletes});
-route("officer/athlete",       {role:"officer", title:"Athlete Record",     sub:"History",           view:Officer.athleteDetail});
-route("officer/reports",       {role:"officer", title:"Reports",            sub:"Export activity",   view:Officer.reports});
-route("officer/notifications", {role:"officer", title:"Notifications",      sub:"Alerts",            view:function(){ return notificationsView("officer"); }, width:"narrow"});
-route("officer/settings",      {role:"officer", title:"Settings",           sub:"Preferences",       view:function(){ return settingsView("officer"); }});
-
-/* --- admin --- */
-route("admin",                 {role:"admin", title:"Overview",             sub:"Administration",    view:Admin.dashboard});
-route("admin/athletes",        {role:"admin", title:"Athlete Database",     sub:"National register", view:Admin.athletes});
-route("admin/athlete",         {role:"admin", title:"Athlete Record",       sub:"History",           view:Admin.athleteDetail});
-route("admin/tests",           {role:"admin", title:"Test Records",         sub:"All forms",         view:Admin.tests});
-route("admin/reports",         {role:"admin", title:"Reports & Export",     sub:"Analytics",         view:Admin.reports});
-route("admin/users",           {role:"admin", title:"Manage Users",         sub:"Access control",    view:Admin.users});
-route("admin/notifications",   {role:"admin", title:"Notifications",        sub:"Alerts",            view:function(){ return notificationsView("admin"); }, width:"narrow"});
-route("admin/settings",        {role:"admin", title:"Settings",             sub:"Preferences",       view:function(){ return settingsView("admin"); }});
+/* Doping control and administration live in DCO Connect, the agency's own
+   platform, hosted by SLADA with individual officer logins. SLADA Connect is
+   the athlete-facing half and holds no officer or administration portal. */
 
 /* ==========================================================================
    Boot

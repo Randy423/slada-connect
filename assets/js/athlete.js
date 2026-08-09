@@ -583,8 +583,6 @@ registerAction("clearRecent", function(i, el, e){
 });
 registerAction("retryLabel", function(key){ retryLabel(key); });
 registerAction("retryRemote", function(rxcui){ retryRemote(rxcui); });
-registerAction("viewUser", function(email){ viewUser(email); });
-registerAction("viewTest", function(id){ viewTest(id); });
 function refreshSearch(){ var b = $("#sbody"); if(b) b.innerHTML = Athlete.searchBody(); }
 function setSpin(on){ var s = $("#sspin"); if(s) s.classList.toggle("hide", !on); }
 
@@ -1439,11 +1437,9 @@ Athlete.profile = function(){
     '</div>';
   }).join("");
 
-  // include tests submitted through the officer workflow, exactly as the
-  // officer and admin views do — otherwise an athlete cannot see a test
-  // that was just recorded against them.
-  var myTests = (Store.s.submittedTests || []).concat(TESTS)
-    .filter(function(x){ return x.athleteId === s.athleteId; });
+  // Tests are recorded by doping control officers in DCO Connect and reach
+  // the athlete from the agency record. Nothing in this platform writes them.
+  var myTests = TESTS.filter(function(x){ return x.athleteId === s.athleteId; });
 
   return '<div class="row mb-24 wrap" style="gap:16px">'+
     '<span class="avatar lg">'+esc(initials(s.athleteName))+'</span>'+

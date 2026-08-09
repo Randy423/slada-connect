@@ -1,7 +1,19 @@
 # SLADA Connect — presentation script
 
 For a meeting with the Director General, SLADA.
-Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 and 6 first.
+Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Section 4 first.
+
+> **Out of date — read before reusing.** This script was written for the
+> version of SLADA Connect that carried all three portals. Following SLADA's
+> direction to split the platform, the officer and administration portals have
+> been removed from SLADA Connect and now live in **DCO Connect**, the agency's
+> own platform.
+>
+> **Sections 5 and 6 no longer demo anything in this app.** They are kept here
+> because the material is still good — it belongs in a DCO Connect script, not
+> this one. Everything else stands, with the timing re-cut around it.
+>
+> Section 12 records what changed.
 
 ---
 
@@ -99,6 +111,11 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 ## 5. Demo: The officer workflow — 3.5 minutes
 
+> ⚠️ **Moved to DCO Connect.** This section does not run in SLADA Connect any
+> more — there is no officer portal here to open. Port it to a DCO Connect
+> script, where the workflow has since been rebuilt around missions and the
+> four SLADA forms. Skip to Section 7.
+
 > **This is now your strongest credibility moment. Open with it.**
 
 **[Open the officer portal, sign in, → New Doping Control Form]**
@@ -141,6 +158,9 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 ## 6. Demo: Administration — 90 seconds (cut second if short on time)
 
+> ⚠️ **Moved to DCO Connect.** There is no admin dashboard in SLADA Connect any
+> more. Port this to a DCO Connect script and skip to Section 7.
+
 **[Open the admin dashboard]**
 
 > "Testing volume by month, in-competition versus out-of-competition, distribution by sport, the athlete database, and exports. This is the view where you'd see whether the testing programme is actually distributed the way you intend it to be — or whether one federation is being tested far more than another."
@@ -151,9 +171,9 @@ Target: **10 minutes demo, 5 minutes discussion.** Adjust by cutting Sections 4 
 
 > "So that you can judge it properly, let me separate what genuinely works from what's staged.
 >
-> **Real:** the medicine search and its live database lookups, the classification and safety logic, the doping control form and its validation, the sample suitability checks, signature capture, the CSV export, and every screen you've seen. It works on any phone.
+> **Real:** the medicine search and its live database lookups, the classification and safety logic, the sport-compatibility answer, account creation and its validation, and every screen you've seen. It works on any phone.
 >
-> **Not real:** there's no login security — any password works. There's no server, so everything lives in the browser on that one device, which also means a form is lost if the app is closed mid-session. Report generation is a button that does nothing. And all the athlete data is invented.
+> **Not real:** there's no login security — any password works. There's no server, so everything lives in the browser on that one device. The testing history is sample data standing in for records the agency would supply. And all the athlete data is invented.
 >
 > The gap between those two lists is roughly what the real work would be."
 
@@ -227,3 +247,28 @@ Then move on. Fumbling with a laptop for ninety seconds costs more than the feat
 ## Closing — 20 seconds
 
 > "That's it. It's a prototype, not a product, and I know the difference. But I think the underlying idea — that an athlete should be able to get a clear, honest answer about a medicine in under a minute, and understand why — is worth building properly. I'd value your view on whether SLADA agrees."
+
+---
+
+## 12. What changed after the DG presentation
+
+The DG and two officers approved the prototype. SLADA then directed that the
+platform be split:
+
+- **SLADA Connect** stays athlete-facing — education, the medicine checker,
+  the quiz, and the athlete's own testing history. That is what this script
+  now demos, minus Sections 5 and 6.
+- **DCO Connect** is the agency platform, hosted by SLADA with individual
+  officer logins, carrying doping control and administration.
+
+What that removed from this codebase: the officer and administration portals,
+the national athlete register (names, dates of birth, NIC numbers), and the
+national testing analytics. The only doping control records left here are the
+signed-in athlete's own.
+
+If you are asked why the platform is split, the honest answer is the good one:
+
+> "The agency asked for it. Officer and administration data is agency data —
+> it should sit on agency infrastructure, behind individual officer logins,
+> not in the same application athletes sign into. Splitting it means an
+> athlete's app never holds another athlete's record."

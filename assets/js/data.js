@@ -534,74 +534,40 @@ var SPORT_EMPHASIS = {
     note:"Team environments are where shared supplements and 'the physio gave it to me' problems arise most often. Strict liability still makes each substance your own responsibility." }
 };
 
-var ATHLETES = [
-  {id:"ATH-1042", name:"Randhir Senaratne",   sport:"Athletics",    fed:"Sri Lanka Athletics",                dob:"1999-04-12", gender:"Male",   nat:"Sri Lankan", nic:"199910401234", status:"Active",   tests:4, last:"2026-06-18"},
-  {id:"ATH-1087", name:"Nimali Fernando",     sport:"Swimming",     fed:"Sri Lanka Aquatic Sports Union",     dob:"2001-09-02", gender:"Female", nat:"Sri Lankan", nic:"200124502211", status:"Active",   tests:3, last:"2026-07-02"},
-  {id:"ATH-1103", name:"Kasun Perera",        sport:"Cricket",      fed:"Sri Lanka Cricket",                  dob:"1997-01-25", gender:"Male",   nat:"Sri Lankan", nic:"199702503391", status:"Active",   tests:6, last:"2026-07-11"},
-  {id:"ATH-1156", name:"Tharushi Karunaratne",sport:"Athletics",    fed:"Sri Lanka Athletics",                dob:"2003-06-14", gender:"Female", nat:"Sri Lankan", nic:"200316604412", status:"Active",   tests:2, last:"2026-05-27"},
-  {id:"ATH-1198", name:"Dinesh Priyantha",    sport:"Weightlifting",fed:"Weightlifting Federation of Sri Lanka",dob:"1995-11-30",gender:"Male",  nat:"Sri Lankan", nic:"199533505523", status:"Active",   tests:7, last:"2026-07-15"},
-  {id:"ATH-1221", name:"Amaya Wickramasinghe",sport:"Badminton",    fed:"Badminton Association of Sri Lanka", dob:"2000-02-18", gender:"Female", nat:"Sri Lankan", nic:"200004906634", status:"Active",   tests:1, last:"2026-04-09"},
-  {id:"ATH-1245", name:"Sahan Jayawardena",   sport:"Rugby",        fed:"Sri Lanka Rugby",                    dob:"1998-08-07", gender:"Male",   nat:"Sri Lankan", nic:"199822007745", status:"Inactive", tests:3, last:"2025-12-02"},
-  {id:"ATH-1260", name:"Ishara Bandara",      sport:"Boxing",       fed:"Boxing Association of Sri Lanka",    dob:"2002-03-21", gender:"Male",   nat:"Sri Lankan", nic:"200208008856", days:0, status:"Active", tests:2, last:"2026-06-30"},
-  {id:"ATH-1284", name:"Chathuri Silva",      sport:"Netball",      fed:"Netball Federation of Sri Lanka",    dob:"1999-12-11", gender:"Female", nat:"Sri Lankan", nic:"199934509967", status:"Active",   tests:2, last:"2026-07-08"},
-  {id:"ATH-1301", name:"Malith Gunasekara",   sport:"Cycling",      fed:"Cycling Federation of Sri Lanka",    dob:"1996-07-04", gender:"Male",   nat:"Sri Lankan", nic:"199618601078", status:"Active",   tests:5, last:"2026-07-19"},
-  {id:"ATH-1322", name:"Hasini Rajapaksa",    sport:"Swimming",     fed:"Sri Lanka Aquatic Sports Union",     dob:"2004-05-16", gender:"Female", nat:"Sri Lankan", nic:"200413702189", status:"Active",   tests:1, last:"2026-03-14"},
-  {id:"ATH-1348", name:"Roshan de Silva",     sport:"Football",     fed:"Football Federation of Sri Lanka",   dob:"1997-10-29", gender:"Male",   nat:"Sri Lankan", nic:"199730303290", status:"Active",   tests:3, last:"2026-06-05"}
-];
+/* The national athlete register — names, dates of birth and NIC numbers —
+   moved to DCO Connect with the officer portal. An athlete-facing app has no
+   reason to hold other athletes' identity records, so it no longer ships one.
 
+   Only the signed-in athlete's own doping control record remains. In
+   production these arrive from the agency, scoped to the athlete requesting
+   them; the platform never receives anybody else's. */
 var TESTS = [
-  {id:"DCF-2026-0412", athlete:"Dinesh Priyantha",    athleteId:"ATH-1198", sport:"Weightlifting",comp:"National Weightlifting Championship", venue:"Sugathadasa Stadium, Colombo", date:"2026-07-15", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"D. Rajapaksa"},
-  {id:"DCF-2026-0418", athlete:"Malith Gunasekara",   athleteId:"ATH-1301", sport:"Cycling",     comp:"Out-of-Competition Programme",        venue:"Training Base, Nuwara Eliya",  date:"2026-07-19", type:"Out-of-Competition",sample:"Blood", status:"Pending",   officer:"D. Rajapaksa"},
-  {id:"DCF-2026-0409", athlete:"Kasun Perera",        athleteId:"ATH-1103", sport:"Cricket",     comp:"Domestic Twenty20 Final",             venue:"R. Premadasa Stadium, Colombo",date:"2026-07-11", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"N. Ekanayake"},
-  {id:"DCF-2026-0406", athlete:"Chathuri Silva",      athleteId:"ATH-1284", sport:"Netball",     comp:"National Netball League",             venue:"Torrington Grounds, Colombo",  date:"2026-07-08", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"N. Ekanayake"},
-  {id:"DCF-2026-0401", athlete:"Nimali Fernando",     athleteId:"ATH-1087", sport:"Swimming",    comp:"National Aquatic Championship",       venue:"Sugathadasa Pool, Colombo",    date:"2026-07-02", type:"In-Competition",    sample:"Both",  status:"Under Review",officer:"D. Rajapaksa"},
-  {id:"DCF-2026-0395", athlete:"Ishara Bandara",      athleteId:"ATH-1260", sport:"Boxing",      comp:"Out-of-Competition Programme",        venue:"Army Camp, Panagoda",          date:"2026-06-30", type:"Out-of-Competition",sample:"Urine", status:"Completed", officer:"S. Wijesinghe"},
-  {id:"DCF-2026-0388", athlete:"Randhir Senaratne",   athleteId:"ATH-1042", sport:"Athletics",   comp:"National Athletics Championship",     venue:"Diyagama Stadium, Homagama",   date:"2026-06-18", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"S. Wijesinghe"},
-  {id:"DCF-2026-0377", athlete:"Roshan de Silva",     athleteId:"ATH-1348", sport:"Football",    comp:"Champions League Final",              venue:"Race Course Ground, Colombo",  date:"2026-06-05", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"N. Ekanayake"},
-  {id:"DCF-2026-0361", athlete:"Tharushi Karunaratne",athleteId:"ATH-1156", sport:"Athletics",   comp:"Junior National Meet",                venue:"Diyagama Stadium, Homagama",   date:"2026-05-27", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"S. Wijesinghe"},
-  {id:"DCF-2026-0340", athlete:"Amaya Wickramasinghe",athleteId:"ATH-1221", sport:"Badminton",   comp:"National Badminton Open",             venue:"Sugathadasa Indoor, Colombo",  date:"2026-04-09", type:"In-Competition",    sample:"Urine", status:"Completed", officer:"D. Rajapaksa"}
+  {id:"DCF-2026-0388", athleteId:"ATH-1042", sport:"Athletics", comp:"National Athletics Championship", venue:"Diyagama Stadium, Homagama", date:"2026-06-18", type:"In-Competition",     sample:"Urine", status:"Completed",    officer:"S. Wijesinghe"},
+  {id:"DCF-2026-0295", athleteId:"ATH-1042", sport:"Athletics", comp:"Out-of-Competition Programme",    venue:"Sugathadasa Stadium, Colombo",date:"2026-03-22", type:"Out-of-Competition", sample:"Urine", status:"Completed",    officer:"N. Ekanayake"},
+  {id:"DCF-2026-0431", athleteId:"ATH-1042", sport:"Athletics", comp:"National Relay Championship",     venue:"Diyagama Stadium, Homagama", date:"2026-07-24", type:"In-Competition",     sample:"Urine", status:"Under Review", officer:"D. Rajapaksa"}
 ];
 
 var NOTIFICATIONS = [
   {id:1, icon:"📄", bg:"bg-red",   title:"New WADA Prohibited List Released",  body:"The 2027 Prohibited List has been published and takes effect on 1 January. Two substances have been added to S6 and the glucocorticoid guidance has been revised.", time:"2 hours ago",  unread:true,  audience:"all"},
   {id:2, icon:"🧪", bg:"bg-blue",  title:"Athlete Selected for Testing",       body:"You have been selected for out-of-competition testing. A doping control officer will contact you. Ensure your whereabouts information is current.", time:"Yesterday",    unread:true,  audience:"athlete"},
-  {id:3, icon:"✅", bg:"bg-green", title:"Testing Report Submitted",           body:"Doping control form DCF-2026-0412 has been submitted to SLADA and is awaiting review.", time:"2 days ago",   unread:false, audience:"officer"},
+  {id:3, icon:"✅", bg:"bg-green", title:"Your Test Has Been Recorded",         body:"Doping control form DCF-2026-0412 has been submitted to SLADA and is awaiting review. You will be contacted only if there is a finding.", time:"2 days ago",   unread:false, audience:"athlete"},
   {id:4, icon:"🎓", bg:"bg-violet",title:"Upcoming Education Session",         body:"A clean sport education session for national squad athletes is scheduled for 14 August at the Ministry of Sports auditorium. Attendance is mandatory for the Registered Testing Pool.", time:"3 days ago",  unread:false, audience:"all"},
   {id:5, icon:"📋", bg:"bg-amber", title:"TUE Application Update",             body:"Your Therapeutic Use Exemption application TUE-2026-0087 is under review by the independent panel. No further action is required from you at this stage.", time:"5 days ago",  unread:false, audience:"athlete"},
   {id:6, icon:"🔔", bg:"bg-blue",  title:"Whereabouts Reminder",               body:"Your quarterly whereabouts filing is due in 7 days. Late or inaccurate filings may be recorded as a filing failure.", time:"1 week ago",   unread:false, audience:"athlete"}
 ];
 
+/* The athlete's own recent activity. This feed used to carry agency events —
+   other athletes being registered and tested by name — which an athlete has
+   no business seeing on their dashboard. It is scoped to them now.
+
+   The national testing charts left with the administration portal. */
 var ACTIVITY = [
-  {icon:"🧪", bg:"bg-blue",   t:"Test registered",        s:"DCF-2026-0418 · Malith Gunasekara · Out-of-Competition", m:"12 min ago"},
-  {icon:"✅", bg:"bg-green",  t:"Report submitted",       s:"DCF-2026-0412 · National Weightlifting Championship",    m:"2 hours ago"},
-  {icon:"👤", bg:"bg-violet", t:"Athlete registered",     s:"Hasini Rajapaksa · Swimming",                            m:"5 hours ago"},
-  {icon:"📄", bg:"bg-amber",  t:"Prohibited List updated",s:"2027 edition published by WADA",                         m:"Yesterday"},
-  {icon:"🎓", bg:"bg-green",  t:"Education session logged",s:"34 athletes completed clean sport module",              m:"2 days ago"},
-  {icon:"🔍", bg:"bg-blue",   t:"Medication checked",     s:"Pseudoephedrine · flagged as threshold substance",       m:"2 days ago"}
-];
-
-var MONTHLY_TESTS = [
-  {m:"Jan", ic:18, ooc:9},  {m:"Feb", ic:22, ooc:11}, {m:"Mar", ic:31, ooc:14},
-  {m:"Apr", ic:27, ooc:12}, {m:"May", ic:38, ooc:17}, {m:"Jun", ic:44, ooc:19},
-  {m:"Jul", ic:36, ooc:21}
-];
-
-var TESTS_BY_SPORT = [
-  {s:"Athletics",     n:68, c:"var(--blue-600)"},
-  {s:"Cricket",       n:52, c:"var(--green-600)"},
-  {s:"Weightlifting", n:47, c:"var(--amber-600)"},
-  {s:"Swimming",      n:34, c:"var(--violet-600)"},
-  {s:"Rugby",         n:28, c:"var(--blue-300)"},
-  {s:"Other",         n:40, c:"var(--faint)"}
-];
-
-var USERS = [
-  {name:"D. Rajapaksa",    email:"d.rajapaksa@example.lk",  role:"Doping Control Officer", status:"Active",   last:"Today, 09:14"},
-  {name:"N. Ekanayake",    email:"n.ekanayake@example.lk",  role:"Doping Control Officer", status:"Active",   last:"Today, 08:02"},
-  {name:"S. Wijesinghe",   email:"s.wijesinghe@example.lk", role:"Doping Control Officer", status:"Active",   last:"Yesterday"},
-  {name:"A. Mendis",       email:"a.mendis@example.lk",     role:"Administrator",          status:"Active",   last:"Today, 10:41"},
-  {name:"P. Kumarasinghe", email:"p.kumara@example.lk",     role:"Results Manager",        status:"Active",   last:"3 days ago"},
-  {name:"T. Fernando",     email:"t.fernando@example.lk",   role:"Education Officer",      status:"Inactive", last:"2 weeks ago"}
+  {icon:"🔍", bg:"bg-blue",   t:"Medicine checked",        s:"Cetirizine · permitted in all sports",                m:"12 min ago"},
+  {icon:"🧪", bg:"bg-amber",  t:"Test recorded against you",s:"DCF-2026-0431 · National Relay Championship",         m:"2 hours ago"},
+  {icon:"📄", bg:"bg-amber",  t:"Prohibited List updated", s:"2027 edition published by WADA",                      m:"Yesterday"},
+  {icon:"📚", bg:"bg-green",  t:"Guide completed",         s:"Strict liability — what you are responsible for",     m:"2 days ago"},
+  {icon:"🧠", bg:"bg-violet", t:"Quiz attempted",          s:"Clean Sport Quiz · best score so far",                m:"3 days ago"},
+  {icon:"🔍", bg:"bg-blue",   t:"Medicine checked",        s:"Pseudoephedrine · threshold substance",               m:"4 days ago"}
 ];
 
 var WADA_UPDATES = [
@@ -618,21 +584,21 @@ var I18N = {
   en:{
     home:"Home", search:"Search", learn:"Learn", profile:"Profile", quiz:"Quiz",
     settings:"Settings", notifications:"Notifications", dashboard:"Dashboard",
-    athlete:"Athlete", officer:"Doping Control Officer", admin:"Administrator",
+    athlete:"Athlete",
     getStarted:"Get Started", learnMore:"Learn More", back:"Back", next:"Next",
     resources:"Official Resources", language:"Language", theme:"Theme"
   },
   si:{
     home:"මුල් පිටුව", search:"සොයන්න", learn:"ඉගෙන ගන්න", profile:"පැතිකඩ", quiz:"ප්‍රශ්නාවලිය",
     settings:"සැකසුම්", notifications:"දැනුම්දීම්", dashboard:"උපකරණ පුවරුව",
-    athlete:"ක්‍රීඩකයා", officer:"උත්තේජක පාලන නිලධාරී", admin:"පරිපාලක",
+    athlete:"ක්‍රීඩකයා",
     getStarted:"ආරම්භ කරන්න", learnMore:"තව දැනගන්න", back:"ආපසු", next:"ඊළඟ",
     resources:"නිල සම්පත්", language:"භාෂාව", theme:"තේමාව"
   },
   ta:{
     home:"முகப்பு", search:"தேடு", learn:"கற்றுக்கொள்", profile:"சுயவிவரம்", quiz:"வினாடி வினா",
     settings:"அமைப்புகள்", notifications:"அறிவிப்புகள்", dashboard:"கட்டுப்பாட்டுப் பலகை",
-    athlete:"விளையாட்டு வீரர்", officer:"ஊக்கமருந்து கட்டுப்பாட்டு அதிகாரி", admin:"நிர்வாகி",
+    athlete:"விளையாட்டு வீரர்",
     getStarted:"தொடங்குங்கள்", learnMore:"மேலும் அறிக", back:"பின்", next:"அடுத்து",
     resources:"அதிகாரப்பூர்வ ஆதாரங்கள்", language:"மொழி", theme:"தீம்"
   }

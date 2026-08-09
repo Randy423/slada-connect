@@ -1,6 +1,6 @@
 # SLADA Connect — One Platform for Clean Sport
 
-A high-fidelity, fully responsive prototype of a unified digital platform for the Sri Lanka Anti-Doping Agency: athlete education, medication guidance, doping control management, officer workflow and administration in one system.
+A high-fidelity, fully responsive prototype of the athlete platform for the Sri Lanka Anti-Doping Agency: athlete education, medication guidance and clean sport training in one system. Doping control and administration live separately in DCO Connect, the agency's own platform.
 
 **Status: concept prototype.** Not an official product of, and not endorsed by, SLADA, WADA or any other organisation. All athlete records, test data, statistics and contact details are illustrative samples.
 
@@ -69,24 +69,33 @@ assets/css/app.css      design system — tokens, layout, components, light + da
 assets/js/data.js       medication ruleset, articles, quiz, sample operational data, i18n
 assets/js/core.js       router, shell, store, charts, drug-database layer, UI primitives
 assets/js/athlete.js    athlete portal incl. "Can I Take This?"
-assets/js/officer.js    officer portal incl. the 7-step testing workflow
-assets/js/admin.js      admin dashboard, athlete database, shared settings + notifications
 assets/js/boot.js       landing page, route table, boot
 ```
 
 Plain `<script>` tags rather than ES modules, so the prototype runs from `file://` as well as over HTTP. Routing is hash-based (`#/athlete/check`), so the browser back button and deep links both work — you can send someone a link to any single screen.
 
-## The three portals
+## Scope: athletes only
 
-Pick a portal from the landing page, or jump straight in:
+SLADA Connect is the athlete-facing half of the platform. Doping control and
+administration — the officer workflow, the national athlete register, reports
+and user management — live in **DCO Connect**, the agency's own platform,
+hosted by SLADA with individual officer logins.
 
-| Portal | Route | Contents |
-| --- | --- | --- |
-| **Athlete** | `#/athlete` | Dashboard, Can I Take This?, Learn (9 guides), Quiz, Prohibited List, TUE, Resources, Profile, Notifications, Settings |
-| **Officer** | `#/officer` | Sign-in, dashboard, 7-step test registration, test records, athlete register, reports |
-| **Administrator** | `#/admin` | Analytics dashboard, athlete database, test records, reports & export, user management |
+That split is deliberate and it shapes what this codebase holds. It ships no
+officer or administration portal, no national athlete register, and no
+national testing analytics. The only doping control records here are the
+signed-in athlete's own; in production they arrive from the agency scoped to
+the athlete requesting them, and the platform never receives anybody else's.
 
-Both the athlete and officer portals have auth guards: any route in those portals redirects to its sign-in screen until you authenticate, including deep links. **No real authentication is implemented** — press Sign in with any values.
+| Route | Contents |
+| --- | --- |
+| `#/` | Landing page |
+| `#/athlete` | Dashboard, Can I Take This?, Learn (9 guides), Quiz, Prohibited List, TUE, Resources, Profile, Notifications, Settings |
+
+The athlete portal has an auth guard: any route redirects to sign-in until you
+authenticate, including deep links. **No real authentication is implemented** —
+press Sign in with any values. Links to the removed `#/officer` and `#/admin`
+routes fall back to the landing page rather than erroring.
 
 ### Athlete accounts
 
@@ -136,15 +145,12 @@ The card also carries a **check another sport** selector, so an athlete can see 
 
 Search results are labelled by origin — *In app* (hand-written guides), *Ingredient* (local ruleset, **works offline**), *Database* (resolved live from RxNorm) — so it is always clear where an answer came from. Network failures degrade to the offline ingredient index rather than breaking.
 
-## Doping control workflow
+## Testing history
 
-`#/officer/new-test` runs the seven steps from the brief: competition → athlete → notification → sample collection → athlete declaration → digital signatures → review. Notable behaviour:
-
-- **Athlete lookup** pulls from the register and fills every field, or you can enter an unregistered athlete manually.
-- **Barcode scanning is simulated.** The Scan button generates a plausible bottle code and renders a deterministic barcode derived from it. A production build would use the device camera or a paired scanner.
-- **Signatures are real.** Three canvas pads capture pointer, touch or stylus input, are stored as PNG data URLs, and are rendered into the review step.
-- **Validation** blocks progress on missing competition, venue, athlete name, sport and both bottle codes. Submission additionally requires the athlete and officer signatures.
-- **Download PDF** uses the browser's print dialogue against a print stylesheet that strips navigation. Submission writes the record to local storage, so it then appears in Test Records, the admin dashboard and the athlete's profile.
+The profile shows the doping control tests recorded against the signed-in
+athlete, each with its status. Nothing in this platform writes them: tests are
+conducted by doping control officers in **DCO Connect** and reach the athlete
+from the agency record.
 
 ## Design system
 
@@ -152,7 +158,7 @@ White-first with blue and green accents, rounded cards, soft shadows and restrai
 
 **Responsive behaviour**, verified at each breakpoint:
 
-- **Mobile (< 1000px)** — athlete portal switches to a bottom tab bar; officer and admin sidebars become a drawer with a scrim; wide tables scroll inside their own container so the page never scrolls sideways.
+- **Mobile (< 1000px)** — a bottom tab bar carries the four main destinations, and the sidebar becomes a drawer with a scrim for everything else; wide tables scroll inside their own container so the page never scrolls sideways.
 - **Tablet (768px)** — single-column dashboards, drawer navigation, full-width cards.
 - **Desktop (≥ 1000px)** — persistent 260px sidebar, two-column dashboards, four-across stat grids.
 
@@ -164,15 +170,15 @@ The interface switches between **English, Sinhala and Tamil** from Settings. Nav
 
 ## What is real and what is simulated
 
-**Real:** medicine search against live APIs; ingredient classification, sport-compatibility logic and all safety rules; athlete account creation with validation; signature capture; form validation; CSV export; print/PDF output; progress, accounts, submitted forms and preferences persisted to local storage; theme and language switching; every screen and route.
+**Real:** medicine search against live APIs; ingredient classification, sport-compatibility logic and all safety rules; athlete account creation with validation; form validation; progress, accounts and preferences persisted to local storage; theme and language switching; every screen and route.
 
-**Simulated:** authentication (no credentials are checked, no password is stored, and any values are accepted); barcode scanning; report generation; officer/admin user management; outbound links, which open an explanatory dialogue instead of navigating away so a live demo cannot get lost.
+**Simulated:** authentication (no credentials are checked, no password is stored, and any values are accepted); the testing history, which is illustrative sample data standing in for records the agency would supply; outbound links, which open an explanatory dialogue instead of navigating away so a live demo cannot get lost.
 
 **Reset:** Settings → *Reset prototype data* restores the starting state before a presentation.
 
 ## Before this becomes a real platform
 
-The interface is presentation-ready. These are the things that must be resolved before any athlete or officer relies on it:
+The interface is presentation-ready. These are the things that must be resolved before any athlete relies on it:
 
 - **Anti-doping classification** comes from the local ruleset, not an official source. It must be replaced by, or validated against, Global DRO and the current Prohibited List. The list changes every 1 January, so this needs a named owner and an annual review cycle — not a one-off sign-off.
 - **RxNorm is US-centric.** It covers Panadol, Ventolin and most international brands, but Sri Lankan generics and local brand names may be missing, and openFDA label text describes the US formulation. The curated in-app list is the mitigation and is where locally common products belong.

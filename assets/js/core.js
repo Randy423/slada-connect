@@ -116,10 +116,7 @@ var DEFAULT_STATE = {
   quizTaken:0,
   theme:"light",
   lang:"en",
-  officerAuth:false,
-  officerName:"D. Rajapaksa",
   readNotifs:[],
-  submittedTests:[],
   prefs:{emailNotif:true, pushNotif:true, testAlerts:true, eduAlerts:false, analytics:true}
 };
 
@@ -506,35 +503,11 @@ var NAVS = {
     {key:"athlete/notifications", label:"Notifications",    ic:"bell", badge:"notif"},
     {key:"athlete/profile",       label:"Profile",          ic:"user"},
     {key:"athlete/settings",      label:"Settings",         ic:"gear"}
-  ],
-  officer:[
-    {sec:"Doping Control"},
-    {key:"officer",               label:"Dashboard",        ic:"grid"},
-    {key:"officer/new-test",      label:"Register New Test",ic:"plus"},
-    {key:"officer/tests",         label:"Test Records",     ic:"flask"},
-    {key:"officer/athletes",      label:"Athletes",         ic:"users"},
-    {key:"officer/reports",       label:"Reports",          ic:"chart"},
-    {sec:"Account"},
-    {key:"officer/notifications", label:"Notifications",    ic:"bell", badge:"notif"},
-    {key:"officer/settings",      label:"Settings",         ic:"gear"}
-  ],
-  admin:[
-    {sec:"Overview"},
-    {key:"admin",                 label:"Dashboard",        ic:"chart"},
-    {key:"admin/athletes",        label:"Athlete Database", ic:"users"},
-    {key:"admin/tests",           label:"Test Records",     ic:"flask"},
-    {key:"admin/reports",         label:"Reports & Export", ic:"doc"},
-    {sec:"Administration"},
-    {key:"admin/users",           label:"Manage Users",     ic:"shield"},
-    {key:"admin/notifications",   label:"Notifications",    ic:"bell", badge:"notif"},
-    {key:"admin/settings",        label:"Settings",         ic:"gear"}
   ]
 };
 
 var ROLE_META = {
-  athlete:{name:"SLADA Connect", role:"Athlete Portal"},
-  officer:{name:"SLADA Connect", role:"Officer Portal"},
-  admin:{name:"SLADA Connect", role:"Administration"}
+  athlete:{name:"SLADA Connect", role:"Athlete Portal"}
 };
 
 var TABBAR = [
@@ -544,8 +517,15 @@ var TABBAR = [
   {key:"athlete/profile", label:"profile", ic:"user"}
 ];
 
-function unreadCount(){
+/* Counts only what an athlete is actually shown, so the sidebar badge and the
+   notifications page never disagree. */
+function athleteNotifications(){
   return NOTIFICATIONS.filter(function(n){
+    return n.audience === "all" || n.audience === "athlete";
+  });
+}
+function unreadCount(){
+  return athleteNotifications().filter(function(n){
     return n.unread && Store.s.readNotifs.indexOf(n.id) === -1;
   }).length;
 }
@@ -566,8 +546,8 @@ var Shell = {
       '</button>';
     }).join("");
 
-    var who = role === "athlete" ? Store.s.athleteName : (role === "officer" ? Store.s.officerName : "A. Mendis");
-    var sub = role === "athlete" ? sportLabel() : (role === "officer" ? "Doping Control Officer" : "System Administrator");
+    var who = Store.s.athleteName;
+    var sub = sportLabel();
 
     var tabs = TABBAR.map(function(tb){
       return '<button class="tab" data-key="'+tb.key+'" onclick="go(\''+tb.key+'\')">'+
@@ -688,10 +668,6 @@ var Router = {
 
     if(!def){ location.hash = "#/"; return; }
 
-    // officer portal requires sign-in
-    if(def.role === "officer" && key !== "officer/login" && !Store.s.officerAuth){
-      location.hash = "#/officer/login"; return;
-    }
     // athlete portal requires an account (or an explicit guest session)
     if(def.role === "athlete" && !def.open && !Store.s.athleteAuth){
       location.hash = "#/athlete/signin"; return;
@@ -700,7 +676,7 @@ var Router = {
     this.current = key;
     // swap only the role class — assigning className wholesale would wipe
     // state classes such as no-proto (set when the banner is dismissed)
-    document.body.classList.remove("athlete","officer","admin");
+    document.body.classList.remove("athlete");
     if(def.role) document.body.classList.add(def.role);
 
     if(!def.role){
@@ -810,4 +786,185 @@ function medRow(m){
     '<span class="lr-status '+st.tint+'">'+esc(st.label)+'</span></span>'+
     '<span class="badge '+BADGE_TONE[m.status]+'">'+esc(st.label)+'</span>'+
   '</button>';
+}
+
+/* ==========================================================================
+   Notifications
+   These lived in admin.js while the platform carried three portals. They are
+   athlete chrome now, so they belong with the rest of the shell.
+   ========================================================================== */
+function notificationsView(){
+  var list = athleteNotifications();
+  var unread = list.filter(function(n){ return n.unread && Store.s.readNotifs.indexOf(n.id) === -1; }).length;
+
+  var items = list.map(function(n){
+    var isUnread = n.unread && Store.s.readNotifs.indexOf(n.id) === -1;
+    return '<div class="notif'+(isUnread?" unread":"")+'" onclick="readNotif('+n.id+')">'+
+      '<span class="n-ic '+n.bg+'">'+n.icon+'</span>'+
+      '<span class="grow"><span class="n-t" style="display:block">'+esc(n.title)+'</span>'+
+      '<span class="n-b" style="display:block">'+esc(n.body)+'</span>'+
+      '<span class="n-m" style="display:block">'+esc(n.time)+'</span></span>'+
+      (isUnread ? '<span class="n-dot"></span>' : "")+
+    '</div>';
+  }).join("");
+
+  return '<div class="row-b mb-24 wrap">'+
+    '<div><h1 style="font-size:clamp(22px,3.2vw,29px);font-weight:820">Notifications</h1>'+
+    '<p class="muted mt-8" style="font-size:14.5px">'+(unread ? unread+" unread" : "You are all caught up")+'</p></div>'+
+    (unread ? '<button class="btn ghost" onclick="markAllRead()">Mark all as read</button>' : "")+
+  '</div>'+
+  (items || '<div class="empty"><div class="e-ic">🔔</div><h4>No notifications</h4><p>New alerts will appear here.</p></div>');
+}
+function readNotif(id){
+  if(Store.s.readNotifs.indexOf(id) === -1){ Store.s.readNotifs.push(id); Store.save(); }
+  var n = null;
+  for(var i=0;i<NOTIFICATIONS.length;i++){ if(NOTIFICATIONS[i].id === id){ n = NOTIFICATIONS[i]; break; } }
+  if(n) UI.modal('<div class="row mb-16" style="gap:12px"><span class="n-ic '+n.bg+'" style="width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:19px">'+n.icon+'</span>'+
+    '<h3 style="margin:0">'+esc(n.title)+'</h3></div>'+
+    '<p>'+esc(n.body)+'</p><p class="muted" style="font-size:12.5px">'+esc(n.time)+'</p>'+
+    '<button class="btn ghost block" onclick="UI.closeModal()">Close</button>');
+  Shell.role = null; Router.render();
+}
+function markAllRead(){
+  athleteNotifications().forEach(function(n){
+    if(Store.s.readNotifs.indexOf(n.id) === -1) Store.s.readNotifs.push(n.id);
+  });
+  Store.save();
+  Shell.role = null;
+  Router.render();
+  UI.toast("All notifications marked as read");
+}
+
+/* ==========================================================================
+   Settings
+   ========================================================================== */
+function settingsView(){
+  var s = Store.s;
+  var langs = [{k:"en",n:"English"},{k:"si",n:"සිංහල · Sinhala"},{k:"ta",n:"தமிழ் · Tamil"}];
+
+  function toggleRow(key, title, sub){
+    var on = s.prefs[key];
+    return '<div class="listrow" onclick="togglePref(\'' + key + '\')">'+
+      '<span class="grow"><span class="lr-t" style="display:block">'+esc(title)+'</span>'+
+      '<span class="lr-s" style="display:block">'+esc(sub)+'</span></span>'+
+      '<span class="switch'+(on?" on":"")+'"></span></div>';
+  }
+
+  return pageHead("Settings","Appearance, language, account and privacy preferences.")+
+  '<div class="dash-grid">'+
+    '<div>'+
+      '<div class="section-h">Appearance</div>'+
+      '<div class="card pad mb-16">'+
+        '<div class="row-b mb-16"><div><b style="font-size:14.5px">Theme</b>'+
+          '<div class="muted" style="font-size:13px;margin-top:3px">Light, or dark for low-light environments</div></div></div>'+
+        '<div class="row wrap" style="gap:10px">'+
+          '<button class="chip'+(s.theme!=="dark"?" on":"")+'" onclick="setTheme(\'light\')">☀️ Light</button>'+
+          '<button class="chip'+(s.theme==="dark"?" on":"")+'" onclick="setTheme(\'dark\')">🌙 Dark</button>'+
+        '</div>'+
+      '</div>'+
+
+      '<div class="section-h">Language</div>'+
+      '<div class="card pad mb-16">'+
+        '<div class="row wrap" style="gap:10px">'+
+          langs.map(function(l){
+            return '<button class="chip'+(s.lang===l.k?" on":"")+'" onclick="setLang(\''+l.k+'\')">'+esc(l.n)+'</button>';
+          }).join("")+
+        '</div>'+
+        '<div class="src-note"><span>'+ICON.info+'</span><span><b>Prototype translation.</b> Navigation labels switch language. '+
+          'Article and medication content remains in English and requires professional translation and review before any public release.</span></div>'+
+      '</div>'+
+
+      '<div class="section-h">Notifications</div>'+
+      '<div class="card" style="padding:6px 18px">'+
+        toggleRow("testAlerts","Testing alerts","Selection for testing and whereabouts reminders")+
+        toggleRow("eduAlerts","Education sessions","Upcoming workshops and course deadlines")+
+        toggleRow("emailNotif","Email notifications","Send a copy to your registered email address")+
+        toggleRow("pushNotif","Push notifications","Alerts on this device")+
+      '</div>'+
+    '</div>'+
+
+    '<div>'+
+      '<div class="section-h">Profile</div>'+
+      '<div class="card pad mb-16">'+
+        '<div class="row mb-16" style="gap:13px">'+
+          '<span class="avatar">'+esc(initials(s.athleteName))+'</span>'+
+          '<div class="grow"><b style="font-size:14.5px">'+esc(s.athleteName)+'</b>'+
+          '<div class="muted" style="font-size:12.5px">'+esc(sportLabel())+'</div></div>'+
+        '</div>'+
+        '<button class="btn ghost block" onclick="editProfile()">Edit profile</button>'+
+      '</div>'+
+
+      '<div class="section-h">Security</div>'+
+      '<div class="card" style="padding:6px 18px">'+
+        '<div class="listrow" onclick="UI.toast(\'Prototype: password change is not implemented\')">'+
+          '<span class="lr-ic bg-slate">'+ICON.shield+'</span>'+
+          '<span class="grow"><span class="lr-t" style="display:block">Change password</span>'+
+          '<span class="lr-s" style="display:block">Last changed 3 months ago</span></span>'+
+          '<span style="color:var(--faint)">'+ICON.chev+'</span></div>'+
+        '<div class="listrow" onclick="UI.toast(\'Prototype: two-factor setup is not implemented\')">'+
+          '<span class="lr-ic bg-slate">🔐</span>'+
+          '<span class="grow"><span class="lr-t" style="display:block">Two-factor authentication</span>'+
+          '<span class="lr-s" style="display:block">Recommended if you share this device</span></span>'+
+          '<span class="badge amber">Off</span></div>'+
+        '<div class="listrow" onclick="UI.toast(\'Prototype: session management is not implemented\')">'+
+          '<span class="lr-ic bg-slate">💻</span>'+
+          '<span class="grow"><span class="lr-t" style="display:block">Active sessions</span>'+
+          '<span class="lr-s" style="display:block">1 device signed in</span></span>'+
+          '<span style="color:var(--faint)">'+ICON.chev+'</span></div>'+
+      '</div>'+
+
+      '<div class="section-h">Privacy</div>'+
+      '<div class="card" style="padding:6px 18px">'+
+        toggleRow("analytics","Usage analytics","Help improve the platform with anonymous usage data")+
+        '<div class="listrow" onclick="privacyInfo()">'+
+          '<span class="lr-ic bg-slate">📄</span>'+
+          '<span class="grow"><span class="lr-t" style="display:block">Data and privacy</span>'+
+          '<span class="lr-s" style="display:block">How your information is handled</span></span>'+
+          '<span style="color:var(--faint)">'+ICON.chev+'</span></div>'+
+      '</div>'+
+
+      '<div class="section-h">Data</div>'+
+      '<div class="card pad">'+
+        '<button class="btn ghost block" onclick="resetPrototype()">↺ Reset prototype data</button>'+
+        '<p class="muted mt-16" style="font-size:11.5px;line-height:1.6;margin-bottom:0">Clears progress, recent searches and preferences stored on this device.</p>'+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="src-note"><span>'+ICON.info+'</span><span>This is a concept prototype. Settings are stored only in this browser and no data leaves your device, '+
+    'other than medicine lookups sent to the public RxNorm and openFDA services.</span></div>';
+}
+
+function setTheme(v){ Store.s.theme = v; Store.save(); applyTheme(); Router.render(); }
+function setLang(v){
+  Store.s.lang = v; Store.save();
+  Shell.role = null;   // rebuild chrome with new labels
+  Router.render();
+  UI.toast(v === "en" ? "Language set to English" : (v === "si" ? "භාෂාව සිංහල ලෙස සකසා ඇත" : "மொழி தமிழாக அமைக்கப்பட்டது"));
+}
+function togglePref(key){
+  Store.s.prefs[key] = !Store.s.prefs[key];
+  Store.save();
+  Router.render();
+}
+function privacyInfo(){
+  UI.modal('<h3>Data and privacy</h3>'+
+    '<p>In this prototype all athlete data and quiz progress are stored only in your browser\'s local storage. Nothing is transmitted to a server.</p>'+
+    '<p>The one exception is the medicine checker, which sends the text you search to two public services — <b>RxNorm</b> (U.S. National Library of Medicine) and <b>openFDA</b> — to identify the medicine and its active ingredients.</p>'+
+    '<p>A production deployment handling real athlete and medical data would require a formal privacy assessment, secure hosting, encryption in transit and at rest, defined retention periods, and compliance with the International Standard for the Protection of Privacy and Personal Information.</p>'+
+    '<button class="btn ghost block" onclick="UI.closeModal()">Close</button>');
+}
+function resetPrototype(){
+  UI.modal('<h3>Reset prototype data?</h3>'+
+    '<p>This clears quiz scores, reading progress, recent searches and preferences, returning the prototype to its starting state.</p>'+
+    '<div class="row" style="gap:10px;justify-content:flex-end">'+
+      '<button class="btn ghost" onclick="UI.closeModal()">Cancel</button>'+
+      '<button class="btn danger" onclick="doReset()">Reset everything</button></div>');
+}
+function doReset(){
+  Store.reset();
+  applyTheme();
+  UI.closeModal();
+  Shell.role = null;
+  go("");
+  UI.toast("Prototype data reset");
 }
