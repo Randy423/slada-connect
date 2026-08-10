@@ -174,3 +174,4 @@ route("athlete/settings",      {role:"athlete", title:"Settings",           sub:
    ========================================================================== */
 if(!location.hash) location.hash = "#/";
 Router.render();
+chatInit();

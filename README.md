@@ -6,7 +6,7 @@ A high-fidelity, fully responsive prototype of the athlete platform for the Sri 
 
 ## Running it
 
-Open `index.html` in any modern browser — no build step, no dependencies, no package install.
+Open `index.html` in any modern browser — no build step, no package install. The front end has no dependencies; the one `package.json` entry is the Anthropic SDK used by the assistant endpoint, which Vercel installs for you and which the static site never loads.
 
 ```bash
 python -m http.server 8794
@@ -58,8 +58,8 @@ Import that repo at [vercel.com/new](https://vercel.com/new). Every push then re
 ### After deploying
 
 - The medicine checker calls RxNorm and openFDA over HTTPS, so it works identically on a `.vercel.app` domain with no CORS or mixed-content issues.
-- Everything is client-side, so there are no environment variables or secrets to configure.
-- If you edit an asset and the change doesn't appear, bump the `?v=2` query strings in `index.html` to `?v=3`.
+- **Set `ANTHROPIC_API_KEY`** in Settings → Environment Variables, then redeploy. This is the one secret the project needs, and it powers Ask SLADA. Without it the assistant falls back to retrieval-only answers from the guides — everything else works untouched.
+- If you edit an asset and the change doesn't appear, bump the `?v=15` query strings in `index.html` to `?v=16`.
 
 ## Structure
 
@@ -69,7 +69,9 @@ assets/css/app.css      design system — tokens, layout, components, light + da
 assets/js/data.js       medication ruleset, articles, quiz, sample operational data, i18n
 assets/js/core.js       router, shell, store, charts, drug-database layer, UI primitives
 assets/js/athlete.js    athlete portal incl. "Can I Take This?"
+assets/js/chat.js       Ask SLADA — retrieval, safety interception, chat UI
 assets/js/boot.js       landing page, route table, boot
+api/chat.js             assistant endpoint (the only server-side code)
 ```
 
 Plain `<script>` tags rather than ES modules, so the prototype runs from `file://` as well as over HTTP. Routing is hash-based (`#/athlete/check`), so the browser back button and deep links both work — you can send someone a link to any single screen.
@@ -144,6 +146,65 @@ Deliberately **not** done: inventing per-sport rules for substances that have no
 The card also carries a **check another sport** selector, so an athlete can see how a substance differs elsewhere without changing their profile (marked *preview*), and a category note — weight-category, endurance, precision or team — flagging the risks that sport most often runs into. Those notes are educational emphasis, clearly separated from status, and never alter a verdict.
 
 Search results are labelled by origin — *In app* (hand-written guides), *Ingredient* (local ruleset, **works offline**), *Database* (resolved live from RxNorm) — so it is always clear where an answer came from. Network failures degrade to the offline ingredient index rather than breaking.
+
+## Ask SLADA — the in-app assistant
+
+An athlete who has to leave the platform to ask a follow-up question often
+doesn't come back. The assistant keeps the question here: it explains
+anti-doping concepts and helps navigate the app, from a launcher on every
+screen except sign-in and registration.
+
+### It never rules on a medicine
+
+This is the design, not a limitation. A question like "can I take Panadol?" is
+intercepted in the browser, before any model call, and answered by handing the
+athlete to the medicine checker with the term pre-filled. The checker resolves
+the real active ingredients through RxNorm and openFDA and answers for the
+athlete's own sport; the assistant can do neither, so it must not guess. Under
+strict liability a wrong answer costs the athlete their career, not the model
+its reputation.
+
+Class-level questions are the opposite case and go through to the model —
+"are stimulants banned?" or "why are beta-blockers restricted in shooting?"
+is education, and that is the job. The line is: explain the category, never
+rule on the product.
+
+The interception is regex-based and lives in `chatVerdictIntent()`. The server
+prompt forbids medicine verdicts independently, so the rule survives even if
+the interception misses a phrasing.
+
+### Grounded, not recalled
+
+Answers are retrieved from this platform's own material: the nine guides split
+into sections, the substance-class explanations from the ruleset, and a set of
+notes about the app's own features. The retrieved passages are sent with the
+question, and the assistant is told to prefer their wording and to say when
+they do not cover something rather than filling the gap from memory. When a
+guide is relevant it names it, and any destination it mentions becomes a
+button.
+
+### Where the key lives
+
+`api/chat.js` is a Vercel serverless function and exists for one reason: the
+Anthropic API key must never reach the browser. The system prompt lives there
+too — a prompt shipped in client JavaScript is one anyone can edit before
+sending, which would make the safety rules advisory.
+
+Set `ANTHROPIC_API_KEY` in the Vercel project (Settings → Environment
+Variables) and redeploy. Without it the endpoint returns 503 and the client
+falls back to retrieval-only answers.
+
+Model is `claude-opus-5` at low effort, streamed, with the system prompt cached
+across requests. Requests are capped on message length, history depth and
+context size before they reach the API — the endpoint is public, so anyone who
+finds the URL can spend the agency's tokens.
+
+### Degrading honestly
+
+From `file://`, offline, or with no key configured, the assistant does not
+pretend to work. It says it cannot be reached and returns the relevant passage
+from the guides instead, which is less useful than an answer and more useful
+than an error. This is the path a local demo takes.
 
 ## Testing history
 
