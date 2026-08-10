@@ -1245,3 +1245,14 @@ html[data-theme="dark"] .demo-note{color:var(--ink-2)}
 @media (max-width:720px){ body.chat-open{overflow:hidden} }
 
 @media print{ .chat-fab,.chat-panel,.chat-scrim{display:none !important} }
+
+/* search progress + citations */
+.cm-status{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--muted)}
+.cm-src{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px}
+.cm-src-h{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:700}
+.cm-src-i{
+  display:flex;align-items:baseline;gap:7px;font-size:12.5px;line-height:1.45;
+  color:var(--blue-700);text-decoration:none;
+}
+.cm-src-i:hover{text-decoration:underline}
+.cm-src-i span{color:var(--faint);font-size:11px;flex:0 0 auto}

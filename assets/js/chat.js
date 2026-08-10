@@ -283,11 +283,37 @@ function chatMsgHTML(m, i){
     }
   }
   var chips = acts;
+  /* Where the answer came from. Shown as plain hostnames rather than raw URLs
+     so an athlete can judge the source at a glance — "wada-ama.org" carries
+     weight that a query string does not.
+
+     esc() is an HTML escaper and does nothing to a URL scheme: "javascript:…"
+     and "data:text/html,…" contain no HTML-special characters, so escaping
+     them yields a live, clickable script. An href is its own context and needs
+     its own check — parse the URL and require http or https. */
+  var srcs = (m.sources && m.sources.length)
+    ? '<div class="cm-src"><span class="cm-src-h">Sources</span>' +
+      m.sources.map(function(s){
+        var u = null;
+        try{ u = new URL(s.url); }catch(e){ return ""; }
+        if(u.protocol !== "http:" && u.protocol !== "https:") return "";
+        var host = u.hostname.replace(/^www\./, "");
+        return '<a class="cm-src-i" href="' + esc(u.href) + '" target="_blank" rel="noopener noreferrer">' +
+          esc(s.title || host) + ' <span>' + esc(host) + "</span></a>";
+      }).join("") + "</div>"
+    : "";
+
+  var busyState = !m.text
+    ? (m.status
+        ? '<span class="cm-status">' + esc(m.status) + '<span class="cm-typing"><i></i><i></i><i></i></span></span>'
+        : '<span class="cm-typing"><i></i><i></i><i></i></span>')
+    : "";
+
   return '<div class="cm cm-bot">' +
     '<span class="cm-av">' + ICON.logo + "</span>" +
-    '<div class="cm-b">' + (m.text ? chatFormat(m.text) : '<span class="cm-typing"><i></i><i></i><i></i></span>') +
+    '<div class="cm-b">' + (m.text ? chatFormat(m.text) : busyState) +
       (m.note ? '<div class="cm-note">' + esc(m.note) + "</div>" : "") +
-      chips +
+      srcs + chips +
     "</div></div>";
 }
 
@@ -419,9 +445,15 @@ function chatSend(text){
   var chunks = chatRetrieve(text, 5, 18000);
   var idx = Chat.msgs.length - 1;
 
-  chatAskServer(text, chunks, function(delta){
-    Chat.msgs[idx].text += delta;
-    chatRepaint();
+  chatAskServer(text, chunks, {
+    delta: function(t){ Chat.msgs[idx].text += t; chatRepaint(); },
+    status: function(tool){
+      Chat.msgs[idx].status = tool === "web_fetch"
+        ? "Reading the source"
+        : "Searching WADA, Global DRO and anti-doping agencies";
+      chatRepaint();
+    },
+    sources: function(list){ Chat.msgs[idx].sources = list; chatRepaint(); }
   }).then(function(ok){
     if(!ok){
       Chat.msgs[idx].text = chatLocalAnswer(text, chunks);
@@ -436,7 +468,7 @@ function chatSend(text){
 
 /* Streams from the endpoint. Resolves true if the assistant answered, false if
    the caller should fall back to the local answer. */
-function chatAskServer(question, chunks, onDelta){
+function chatAskServer(question, chunks, on){
   if(Chat.online === false) return Promise.resolve(false);
   if(location.protocol === "file:"){ Chat.online = false; return Promise.resolve(false); }
 
@@ -479,8 +511,10 @@ function chatAskServer(question, chunks, onDelta){
           if(line.indexOf("data:") !== 0) return;
           var ev;
           try{ ev = JSON.parse(line.slice(5).trim()); }catch(e){ return; }
-          if(ev.type === "delta"){ got = true; onDelta(ev.text); }
-          else if(ev.type === "error"){ failed = !got; if(got) onDelta("\n\n" + ev.message); }
+          if(ev.type === "delta"){ got = true; on.delta(ev.text); }
+          else if(ev.type === "status"){ on.status(ev.tool); }
+          else if(ev.type === "sources"){ on.sources(ev.sources); }
+          else if(ev.type === "error"){ failed = !got; if(got) on.delta("\n\n" + ev.message); }
         });
         return pump();
       });
